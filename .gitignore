@@ -1,0 +1,28 @@
+node_modules/
+dist/
+.env
+.env.local
+.env.*.local
+*.log
+coverage/
+.DS_Store
+# 키/시크릿 절대 커밋 금지
+*.pem
+*.p12
+*.pfx
+keys/
+# 로컬 tooling 상태
+.bkit/
+.claude/
+.env.prod
+
+# 로컬 키볼트/파일스토어 (개인키 암호화 blob 포함 — 커밋 금지)
+data/
+
+# EMR 보안성 시연 증빙 산출물(인증서·검증·감사 PDF 등 — 환경별 생성물)
+emr-evidence/
+
+# bkit 자동추적 로컬상태(노이즈 — 추적 제외)
+docs/.bkit-memory.json
+docs/.pdca-status.json
+docs/.pdca-snapshots/

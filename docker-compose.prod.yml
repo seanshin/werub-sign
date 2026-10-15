@@ -1,0 +1,202 @@
+# sign 운영 배포 — 서비스 + PostgreSQL (원내 서버)
+# 사용:
+#   1) .env.prod 작성 (아래 environment 참조 — 시크릿은 Vault/CI Secrets 권장)
+#   2) docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
+#   3) 검증: curl http://localhost:4000/health → DB_URL로 prisma-live e2e
+services:
+  sign:
+    build: .
+    image: sign-app:latest # crypto-proxy·idv-proxy가 재사용
+    container_name: sign-core
+    restart: unless-stopped
+    # 동일서버 호스트 프로세스(ERP 등) outbound webhook 도달용 — 컨테이너에서 host.docker.internal 로 호스트 접근.
+    # (호스트 서비스는 loopback 전용이 아닌 0.0.0.0/도커브리지 바인드 필요)
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      SIGN_PORT: '4000'
+      STORE_DRIVER: prisma
+      # 호스트=sign-postgres(고유 container_name) — docker_default 합류 시 'postgres' 별칭 충돌(다른 PG) 방지
+      DB_URL: postgresql://sign:${POSTGRES_PASSWORD:-signpw}@sign-postgres:5432/sign?schema=public
+      # SOFT 개인키 영속(재기동 후 신규 발급 유지) — 마스터키로 암호화 보관. 운영 강화는 HSM/proxy.
+      CRYPTO_KEY_VAULT: /app/data/key-vault.json
+      # ── 시크릿 (필수: .env.prod 또는 Vault 주입) ──
+      CRYPTO_MASTER_KEY: ${CRYPTO_MASTER_KEY:?openssl rand -base64 32}
+      CRYPTO_PEPPER: ${CRYPTO_PEPPER:?openssl rand -base64 32}
+      HIS_INBOUND_API_KEY: ${HIS_INBOUND_API_KEY:?HIS와 합의값}
+      HIS_WEBHOOK_SECRET: ${HIS_WEBHOOK_SECRET:?HIS와 합의값}
+      HIS_WEBHOOK_URL: ${HIS_WEBHOOK_URL:-} # 전역 webhook 수신 URL(facade 등 callbackUrl 미지정 시 기본)
+      # ── HIS 연동 (라이브 교차검증 완료 값) ──
+      HIS_SSO_JWKS_URL: ${HIS_SSO_JWKS_URL:-https://his.example.org/api/v1/sign-integration/jwks}
+      HIS_SSO_ISSUER: ${HIS_SSO_ISSUER:-hospitalrun}
+      HIS_SSO_AUDIENCE: ${HIS_SSO_AUDIENCE:-sign} # 서명 토큰 aud(뷰어 SSO와 분리). 빈값 불가
+      HIS_SSO_ALLOWED_ROLES: ${HIS_SSO_ALLOWED_ROLES:-} # 설정 시 STAFF role allow-list(예: DOCTOR)
+      # ── 콘솔/PACS/CA 운영·발송·CORS ──
+      CONSOLE_API_KEY: ${CONSOLE_API_KEY:-}
+      PACS_API_KEY: ${PACS_API_KEY:-}
+      # ERP 외부 거래처 계약 서명(트랙 A) — 기계 키 + 전용 webhook 시크릿(HIS 시크릿 미공유)
+      ERP_API_KEY: ${ERP_API_KEY:-}
+      ERP_WEBHOOK_SECRET: ${ERP_WEBHOOK_SECRET:-}
+      # 소비자별 webhook 서명 시크릿 — 수신 측이 자기 시크릿으로 HMAC 를 검증한다(<소비자>_WEBHOOK_SECRET 규칙)
+      EDU_WEBHOOK_SECRET: ${EDU_WEBHOOK_SECRET:-}
+      SIGN_ADMIN_API_KEY: ${SIGN_ADMIN_API_KEY:-}
+      # ── C-4 다중관리자 RBAC ── 최초 admin 부트스트랩(계정 0개 시)·세션 토큰 설정. 미설정 시
+      # break-glass(SIGN_ADMIN_API_KEY, users:admin)로 첫 계정 생성. SESSION_SECRET 미설정 시 CRYPTO_MASTER_KEY 파생.
+      SIGN_ADMIN_USER: ${SIGN_ADMIN_USER:-admin}
+      SIGN_ADMIN_PASSWORD: ${SIGN_ADMIN_PASSWORD:-}
+      SESSION_SECRET: ${SESSION_SECRET:-}
+      SESSION_TTL_MIN: ${SESSION_TTL_MIN:-480} # 절대 세션 만료(분, 기본 8h)
+      SESSION_IDLE_TIMEOUT_MIN: ${SESSION_IDLE_TIMEOUT_MIN:-15} # 콘솔 비활동 자동 로그아웃(분, EMR F004)·운영모드 0 금지→15 강제
+      SESSION_MAX_CONCURRENT: ${SESSION_MAX_CONCURRENT:-3} # 동일 사용자 동시 세션 한도(ISMS-P 2.6.3)·0=무제한
+      NOTIFIER_PROVIDER: ${NOTIFIER_PROVIDER:-mock}
+      CORS_ORIGINS: ${CORS_ORIGINS:-}
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-https://sign.example.org} # portalUrl·auditCertUri 생성용
+      # ── go-live 보안 하드닝(§6.1) — 통합 단계엔 false, go-live 시 제거/true ──
+      SECURITY_HARDENING: ${SECURITY_HARDENING:-} # H3/H4/M1 게이트(production 기본 ON, false면 강제 OFF)
+      RATE_LIMIT_PER_MIN: ${RATE_LIMIT_PER_MIN:-120}
+      TRUST_PROXY: ${TRUST_PROXY:-loopback, linklocal, uniquelocal} # H4 — nginx XFF 실IP 해석(rate-limit 정합)
+      SCHEDULER_ENABLED: ${SCHEDULER_ENABLED:-}
+      SCHEDULER_WEBHOOK_RETRY_MIN: ${SCHEDULER_WEBHOOK_RETRY_MIN:-5}
+      SCHEDULER_EXPIRE_MIN: ${SCHEDULER_EXPIRE_MIN:-60}
+      # 앵커 이중화(보안 S1) — 외부 RFC3161 TSA(쉼표 구분). 자체 TSA 만으로는 운영자 독립 증거가 아님
+      ANCHOR_TSA_URLS: ${ANCHOR_TSA_URLS:-}
+      SCHEDULER_ANCHOR_MIN: ${SCHEDULER_ANCHOR_MIN:-1440}
+      # 능동 감시·운영 알림(S9) — 수신자(OPS_ALERT_TO) 미설정이면 로그 전용으로 동작한다
+      SCHEDULER_WATCH_MIN: ${SCHEDULER_WATCH_MIN:-5}
+      OPS_ALERT_TO: ${OPS_ALERT_TO:-}
+      ALERT_THROTTLE_MIN: ${ALERT_THROTTLE_MIN:-60}
+      ALERT_LOGIN_FAIL_THRESHOLD: ${ALERT_LOGIN_FAIL_THRESHOLD:-10}
+      ALERT_LOGIN_FAIL_WINDOW_MIN: ${ALERT_LOGIN_FAIL_WINDOW_MIN:-10}
+      BACKUP_MAX_AGE_H: ${BACKUP_MAX_AGE_H:-26}
+      # ── 피처플래그(기본 OFF) — .env.prod 에서 on 지정 시 활성 ──
+      ELECTRONIC_APPROVAL: ${ELECTRONIC_APPROVAL:-}
+      PORTAL_DOC_PREVIEW: ${PORTAL_DOC_PREVIEW:-}
+      # ── 일반 전자계약(v1.9.0) — 활성 시 외부 서명자 이메일 발송용 SMTP 필수 ──
+      GENERAL_CONTRACTS: ${GENERAL_CONTRACTS:-}
+      CONTRACT_PORTAL_BASE_URL: ${CONTRACT_PORTAL_BASE_URL:-https://sign.example.org}
+      CONTRACT_REMIND_AFTER_DAYS: ${CONTRACT_REMIND_AFTER_DAYS:-3}
+      CONTRACT_DELIVERY_TTL_HOURS: ${CONTRACT_DELIVERY_TTL_HOURS:-72}
+      SCHEDULER_CONTRACT_MIN: ${SCHEDULER_CONTRACT_MIN:-60}
+      SMTP_URL: ${SMTP_URL:-} # 예: smtps://resend:<API_KEY>@smtp.resend.com:465
+      SMTP_FROM: ${SMTP_FROM:-}
+      WEBHOOK_ALLOWED_HOSTS: ${WEBHOOK_ALLOWED_HOSTS:-}
+      # M1 예외 — 동일서버 내부 webhook 수신부(host:port, http·루프백 허용). 예: ERP 127.0.0.1:8001
+      WEBHOOK_INTERNAL_HOSTS: ${WEBHOOK_INTERNAL_HOSTS:-}
+      # ── 키 커스터디·본인인증 분리(proxies 프로파일 사용 시) — 기본 인프로세스 ──
+      KEY_SIGNER_DRIVER: ${KEY_SIGNER_DRIVER:-soft} # soft | proxy(crypto-proxy 분리)
+      CRYPTO_PROXY_URL: ${CRYPTO_PROXY_URL:-http://crypto-proxy:4900}
+      CRYPTO_PROXY_TOKEN: ${CRYPTO_PROXY_TOKEN:-}
+      IDV_DRIVER: ${IDV_DRIVER:-local} # local(mock) | proxy(idv-proxy 분리)
+      IDV_PROXY_URL: ${IDV_PROXY_URL:-http://idv-proxy:4920}
+      IDV_PROXY_TOKEN: ${IDV_PROXY_TOKEN:-}
+    ports:
+      - '${SIGN_BIND:-127.0.0.1}:${SIGN_HOST_PORT:-4000}:4000' # 로컬바인드 — 외부 노출은 nginx 경유
+    volumes:
+      - sign_keydata:/app/data # SOFT 키볼트 영속(암호화 blob)
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://localhost:4000/health || exit 1']
+      interval: 15s
+      timeout: 3s
+      retries: 5
+    networks:
+      - default # sign_default — postgres 등 내부
+      - shared # docker_default — 동일서버 소비자(ERP infra-*)가 sign-core:4000 서비스DNS로 호출(공개 노출 0)
+
+  web:
+    build:
+      context: ./web
+      args:
+        # 빈 값 = same-origin(상대경로). nginx가 같은 도메인에서 / 와 /v1 을 분기.
+        NEXT_PUBLIC_SIGN_API_URL: ${NEXT_PUBLIC_SIGN_API_URL:-}
+    container_name: sign-web
+    restart: unless-stopped
+    environment:
+      # CSP(S3) — report(기본, 위반만 수집)→관찰 후 enforce 전환. off=비상 롤백.
+      CSP_MODE: ${CSP_MODE:-report}
+      # HIS 등 외부 오리진이 콘솔·포털을 iframe 임베드해야 할 때만 설정(기본 'self')
+      CSP_FRAME_ANCESTORS: ${CSP_FRAME_ANCESTORS:-}
+    depends_on:
+      - sign
+    ports:
+      - '${WEB_BIND:-127.0.0.1}:${WEB_HOST_PORT:-3000}:3000' # nginx가 프록시
+    healthcheck:
+      # busybox wget는 리다이렉트 처리가 약해 node fetch로 검사(node 런타임 보장)
+      test: ['CMD-SHELL', 'node -e "fetch(''http://localhost:3000/admin/login'').then(r=>process.exit(r.status<400?0:1)).catch(()=>process.exit(1))"']
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # ── 개인키 분리(키 커스터디) — `--profile proxies` 로 기동, sign에 KEY_SIGNER_DRIVER=proxy 설정 ──
+  crypto-proxy:
+    image: sign-app:latest
+    build: .
+    command: ['node', 'dist/crypto-proxy/main.js']
+    container_name: sign-crypto-proxy
+    profiles: ['proxies']
+    restart: unless-stopped
+    environment:
+      CRYPTO_PROXY_PORT: '4900'
+      CRYPTO_PROXY_TOKEN: ${CRYPTO_PROXY_TOKEN:-}
+      CRYPTO_PROXY_VAULT: /app/data/key-vault.json
+      CRYPTO_MASTER_KEY: ${CRYPTO_MASTER_KEY:-}
+      HSM_PROVIDER: ${HSM_PROVIDER:-none} # none | aws-kms | pkcs11 | aws-cloudhsm
+      AWS_REGION: ${AWS_REGION:-}
+      # 온프레 HSM(PKCS#11) — HSM_PROVIDER=pkcs11|aws-cloudhsm 시. 벤더 .so는 이미지에 마운트 필요(graphene-pk11 별도 설치)
+      PKCS11_MODULE: ${PKCS11_MODULE:-}
+      PKCS11_PIN: ${PKCS11_PIN:-}
+      PKCS11_TOKEN_LABEL: ${PKCS11_TOKEN_LABEL:-}
+      PKCS11_SLOT: ${PKCS11_SLOT:-}
+    volumes:
+      - sign_keydata:/app/data # SOFT 키볼트(앱과 분리 보관)
+    expose: ['4900'] # 사설망 전용(호스트 미노출)
+
+  # ── 본인인증(PASS/명의) 분리 — `--profile proxies`, sign에 IDV_DRIVER=proxy 설정 ──
+  idv-proxy:
+    image: sign-app:latest
+    build: .
+    command: ['node', 'dist/idv-proxy/main.js']
+    container_name: sign-idv-proxy
+    profiles: ['proxies']
+    restart: unless-stopped
+    environment:
+      IDV_PROXY_PORT: '4920'
+      IDV_PROXY_TOKEN: ${IDV_PROXY_TOKEN:-}
+      IDV_PROVIDER: ${IDV_PROVIDER:-mock} # mock | pass | mobile-name
+      CRYPTO_PEPPER: ${CRYPTO_PEPPER:?openssl rand -base64 32}
+      IDV_API_KEY: ${IDV_API_KEY:-}
+      IDV_ENDPOINT: ${IDV_ENDPOINT:-}
+    expose: ['4920'] # 사설망 전용
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: sign-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: sign
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-signpw}
+      POSTGRES_DB: sign
+    volumes:
+      - sign_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U sign -d sign']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  sign_pgdata:
+  sign_keydata:
+
+networks:
+  # default = sign_default(이 프로젝트 전용, postgres·web·proxy). 미지정 서비스는 자동 합류.
+  default: {}
+  # shared = 기존 외부망 docker_default(ERP infra-* + 공유 PG/redis). sign-core만 추가 합류 —
+  # ERP 컨테이너가 http://sign-core:4000/v1 로 호출(재바인드·공개노출 0). API 키 인증이 경계.
+  shared:
+    external: true
+    name: docker_default

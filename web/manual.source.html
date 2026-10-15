@@ -1,0 +1,1035 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>sign 전자서명 — 운영 매뉴얼</title>
+<style>
+  :root { --bg:#0b1020; --panel:#11182e; --ink:#1f2937; --muted:#6b7280; --line:#e5e7eb; --brand:#2563eb; --ok:#16a34a; --warn:#d97706; --danger:#dc2626; }
+  * { box-sizing: border-box; }
+  /* overflow-x:hidden 은 position:sticky 를 깨므로 사용 금지. 오버플로는 셀/코드 줄바꿈으로 처리. */
+  body { margin:0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; color:var(--ink); background:#f8fafc; line-height:1.65; }
+  .wrap { display:grid; grid-template-columns: 280px minmax(0, 1fr); align-items:start; }
+  h2[id], h3[id] { scroll-margin-top: 16px; } /* 앵커 점프 시 제목이 상단에 붙지 않도록 여백 */
+  nav.toc { position:sticky; top:0; align-self:start; height:100vh; overflow:auto; padding:24px 16px; background:#0b1020; color:#cbd5e1; font-size:13.5px; }
+  nav.toc h1 { color:#fff; font-size:16px; margin:0 0 4px; }
+  nav.toc .sub { color:#64748b; font-size:12px; margin-bottom:16px; }
+  nav.toc a { display:block; color:#cbd5e1; text-decoration:none; padding:4px 8px; border-radius:6px; }
+  nav.toc a:hover { background:#1e293b; color:#fff; }
+  nav.toc a.sec { margin-top:10px; color:#93c5fd; font-weight:600; }
+  main { padding:40px 48px; max-width:920px; min-width:0; }
+  h2 { font-size:22px; margin:48px 0 12px; padding-top:8px; border-top:2px solid var(--line); }
+  h2:first-of-type { border-top:0; margin-top:0; }
+  h3 { font-size:17px; margin:26px 0 8px; color:#0f172a; }
+  h4 { font-size:14.5px; margin:18px 0 6px; color:#334155; }
+  p, li { font-size:14.5px; }
+  code { background:#eef2f7; padding:1px 6px; border-radius:5px; font-size:13px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  pre { background:#0f172a; color:#e2e8f0; padding:14px 16px; border-radius:10px; overflow:auto; font-size:12.5px; }
+  pre code { background:none; color:inherit; padding:0; }
+  table { border-collapse:collapse; width:100%; margin:12px 0; font-size:13.5px; }
+  th, td { border:1px solid var(--line); padding:8px 10px; text-align:left; vertical-align:top; word-break:break-word; overflow-wrap:anywhere; }
+  th { background:#f1f5f9; }
+  .note { border-left:4px solid var(--brand); background:#eff6ff; padding:10px 14px; border-radius:0 8px 8px 0; margin:14px 0; }
+  .warn { border-left:4px solid var(--warn); background:#fffbeb; padding:10px 14px; border-radius:0 8px 8px 0; margin:14px 0; }
+  .danger { border-left:4px solid var(--danger); background:#fef2f2; padding:10px 14px; border-radius:0 8px 8px 0; margin:14px 0; }
+  .pill { display:inline-block; padding:1px 8px; border-radius:999px; font-size:12px; font-weight:600; }
+  .pill.ok { background:#dcfce7; color:#166534; } .pill.warn{ background:#fef3c7; color:#92400e;} .pill.muted{ background:#e2e8f0; color:#475569;}
+  /* 화면별 안내 */
+  .screen { border:1px solid var(--line); border-radius:12px; padding:0; margin:18px 0 26px; overflow:hidden; background:#fff; }
+  .screen > .cap { background:#0f172a; color:#e2e8f0; padding:8px 14px; font-size:13px; font-weight:600; display:flex; align-items:center; gap:8px; }
+  .screen > .cap .url { color:#7dd3fc; font-family:ui-monospace, monospace; font-size:12px; font-weight:400; }
+  .screen .wire { padding:14px; display:grid; gap:8px; background:#f8fafc; }
+  .wire .bar { height:26px; border-radius:6px; background:#e2e8f0; display:flex; align-items:center; padding:0 10px; font-size:11.5px; color:#475569; }
+  .wire .bar.brand { background:#dbeafe; color:#1e40af; font-weight:600; }
+  .wire .row { display:flex; gap:8px; }
+  .wire .box { flex:1; border:1px dashed #cbd5e1; border-radius:6px; padding:8px 10px; font-size:11.5px; color:#64748b; background:#fff; }
+  .wire .btn { display:inline-block; background:#2563eb; color:#fff; border-radius:6px; padding:3px 10px; font-size:11.5px; }
+  .wire .btn.ghost { background:#e2e8f0; color:#334155; }
+  .screen .body { padding:12px 16px 16px; }
+  .screen .body p, .screen .body ul { margin:6px 0; }
+  .steps { counter-reset: s; list-style:none; padding-left:0; }
+  .steps li { counter-increment:s; position:relative; padding-left:30px; margin:6px 0; }
+  .steps li::before { content:counter(s); position:absolute; left:0; top:1px; width:20px; height:20px; background:var(--brand); color:#fff; border-radius:50%; font-size:12px; display:flex; align-items:center; justify-content:center; }
+  header.top { grid-column:1/-1; background:#0b1020; color:#fff; padding:22px 48px; display:flex; justify-content:space-between; align-items:center; }
+  header.top h1 { margin:0; font-size:20px; } header.top .v { color:#93c5fd; font-size:13px; }
+  .actions button { background:#1e293b; color:#fff; border:1px solid #334155; border-radius:8px; padding:7px 12px; font-size:13px; cursor:pointer; margin-left:8px; }
+  .actions button:hover { background:#334155; }
+  footer { grid-column:1/-1; padding:24px 48px; color:var(--muted); font-size:12px; border-top:1px solid var(--line); }
+  @media print { nav.toc, .actions { display:none; } .wrap{ grid-template-columns:1fr; } main{ max-width:none; padding:0; } header.top{ color:#000; background:#fff; border-bottom:2px solid #000; } }
+  @media (max-width: 860px) { .wrap{ grid-template-columns:1fr; } nav.toc{ position:static; height:auto; } main{ padding:24px; } }
+</style>
+</head>
+<body>
+<header class="top">
+  <div><h1>sign 전자서명 플랫폼 — 운영 매뉴얼</h1><span class="v">의료기관 전자동의서·전자서명 서비스 · v1.6.0 · 제작 (주)위루비</span></div>
+  <div class="actions"><button onclick="window.print()">🖨 인쇄 / PDF</button></div>
+</header>
+<div class="wrap">
+<nav class="toc">
+  <h1>목차</h1><div class="sub">운영·등록·관리 가이드</div>
+  <a class="sec" href="#golive" style="background:#7c2d12;color:#fed7aa;font-weight:700;">🚀 0. 실서비스 개시(go-live)</a>
+  <a href="#golive-state">0.1 현재↔실서비스 상태</a>
+  <a href="#golive-checklist">0.2 개시 전 필수(순서)</a>
+  <a href="#golive-terms">0.3 핵심 정의(용어)</a>
+  <a href="#golive-signals">0.4 상태 확인 신호</a>
+  <a href="#golive-legal">0.5 법적효력·인증 근거</a>
+  <a href="#golive-security">0.6 보안·감사 핵심</a>
+  <a href="#golive-channels">0.7 연동 채널 요약</a>
+  <a href="#golive-teams">0.8 팀별 개시 액션</a>
+  <a href="#golive-verify">0.9 개시 검증 체크리스트</a>
+  <a class="sec" href="#overview">1. 개요·아키텍처</a>
+  <a href="#start">2. 콘솔 시작하기</a>
+  <a href="#screens">2.2 화면별 안내</a>
+  <a class="sec" href="#cert">3. 인증서 등록·관리</a>
+  <a href="#cert-enroll">3.1 발급(등록)</a>
+  <a href="#cert-staff">3.2 의료진 온보딩</a>
+  <a href="#cert-manage">3.3 목록·중단·폐기</a>
+  <a class="sec" href="#request">4. 서명요청·서명</a>
+  <a href="#portal">4.1 환자 포털·본인인증</a>
+  <a href="#notify">4.2 발송·이력</a>
+  <a href="#contracts">4.3 일반 전자계약</a>
+  <a class="sec" href="#integrations">5. 연동 설정</a>
+  <a class="sec" href="#logs">6. 보안·로그·감사</a>
+  <a href="#sec-authz">6.1 인증·인가(접근통제)</a>
+  <a href="#sec-crypto">6.2 암호화·데이터 보호</a>
+  <a href="#sec-keys">6.3 키 수탁·경계</a>
+  <a href="#sec-hardening">6.4 하드닝(go-live)</a>
+  <a href="#sec-logs">6.5 로그·감사</a>
+  <a href="#sec-tamper">6.6 위변조방지 4중</a>
+  <a href="#sec-secrets">6.7 시크릿 관리·회전</a>
+  <a href="#sec-review">6.8 보안 검토 이력</a>
+  <a href="#sec-isms">6.9 ISMS-P·ISO27001 매핑</a>
+  <a href="#sec-privacy">6.10 개인정보(ISO27701)</a>
+  <a href="#sec-cloud">6.11 클라우드(27017/18·CSAP·망분리)</a>
+  <a href="#sec-incident">6.12 사고대응 절차서</a>
+  <a class="sec" href="#ops">7. 운영</a>
+  <a href="#ops-hardening">7.1 보안 하드닝</a>
+  <a href="#ops-keys">7.2 키수탁·HSM</a>
+  <a href="#ops-secrets">7.3 시크릿 회전</a>
+  <a href="#ops-monitor">7.4 모니터링·백업</a>
+  <a href="#ops-rbac">7.5 관리자 계정·RBAC</a>
+  <a class="sec" href="#hisint">8. HIS·PACS 연동</a>
+  <a class="sec" href="#emr">9. EMR 인증 대응</a>
+  <a class="sec" href="#checklist">10. 운영 체크리스트</a>
+  <a class="sec" href="#trouble">11. 트러블슈팅</a>
+  <a class="sec" href="#api">12. API 레퍼런스</a>
+  <a class="sec" href="#samples">부록 A. 등록·요청 샘플</a>
+  <a class="sec" href="#runbook">부록 B. 운영 절차(런북)</a>
+  <a class="sec" href="#glossary">부록 C. 용어집</a>
+  <a class="sec" href="#faq">부록 D. FAQ</a>
+</nav>
+<main>
+
+<h2 id="golive" style="border-top:4px solid #ea580c;padding-top:14px;">🚀 0. 실서비스 개시(go-live) — 필수 참고</h2>
+<div class="note" style="border-left:4px solid #ea580c;background:#fff7ed;">
+<strong>한 줄 요약</strong>: 코드측은 완결(트러스트 코어·PKI·HSM 어댑터·하드닝·RBAC·HIS/PACS/ERP 연동 라이브). <strong>실서비스 개시 = 벤더 계약 + cutover 코디네이션</strong>(외부 의존). 본 §0은 개시 전 필수 항목·정의 요약이며, <strong>실행 순서 단일 체크리스트는 <code>docs/06-ops/go-live-runbook.md</code></strong>가 최종 기준.
+</div>
+
+<h3 id="golive-state">0.1 현재 ↔ 실서비스 상태</h3>
+<table>
+<tr><th>영역</th><th>현재(통합)</th><th>실서비스 개시(목표)</th></tr>
+<tr><td>본인확인(IDV)</td><td><code>mock</code> — 포털 <code>identityDemo=true</code>(PASS 생략 가능)</td><td>실 사업자 <code>IDV_PROVIDER=pass</code> → 생략 자동 차단(실 본인확인)</td></tr>
+<tr><td>발송(Notifier)</td><td><code>mock</code></td><td>알림톡/SMS 벤더</td></tr>
+<tr><td>키 수탁(CA 앵커)</td><td>SOFT, <code>assuranceLevel=SOFTWARE</code></td><td>KMS/HSM → <code>HSM_ANCHORED</code></td></tr>
+<tr><td>시크릿(API키·webhook)</td><td>통합 단일 키</td><td>P8 무중단 회전</td></tr>
+<tr><td>운영 DB</td><td>테스트데이터 누적</td><td>P7 clean-reset</td></tr>
+<tr><td>관리자 콘솔</td><td>RBAC 계정(부트스트랩·임시비번)+break-glass</td><td>정규 계정·임시비번 교체·H2 IP 제한</td></tr>
+</table>
+
+<h3 id="golive-checklist">0.2 실서비스 개시 전 필수 (순서)</h3>
+<p><strong>① 벤더/조달(리드타임 큼·먼저 착수)</strong></p>
+<ul>
+<li><strong>본인확인 사업자(PASS/명의)</strong> — KCB·NICE·드림시큐리티 등 본인확인기관. 계약→<code>IDV_PROVIDER=pass</code>+자격증명. <strong>전자서명 법적효력의 전제</strong>(미계약 동안 <code>identityDemo</code>로 운영).</li>
+<li><strong>알림톡/SMS 벤더</strong> — <code>NOTIFIER_PROVIDER=kakao|sms</code>. 미계약 시 연동팀 직접 발송으로 운영 가능.</li>
+<li><strong>AWS KMS 계정/IAM</strong>(또는 온프레 PKCS#11 HSM) — CA 앵커 HSM 상주용.</li>
+</ul>
+<p><strong>② cutover(양팀 freeze 합의·1회성)</strong></p>
+<ol class="steps">
+<li><strong>P7 운영 DB clean-reset</strong> — 테스트데이터 제거·CA 재생성(3팀 freeze). 절차: <code>clean-reset-runbook.md</code>.</li>
+<li><strong>KMS cutover</strong> — CA 앵커 KMS 상주 → <code>assuranceLevel HSM_ANCHORED</code>(P7과 함께 1회).</li>
+<li><strong>실 IDV/Notifier 전환</strong> — 연동설정 콘솔에서 provider·자격증명 입력(런타임 즉시). 포털 <code>identityDemo=false</code> 확인.</li>
+<li><strong>P8 시크릿 회전</strong> — 팀 API키(rotate→팀 전환→commit) + webhook 시크릿(수신팀 dual-accept 후 flip) + 내부 키. 소비자별 격리.</li>
+<li><strong>H2 관리자 콘솔 IP 제한</strong>(nginx) — Cloudflare 뒤 실IP 복원 또는 CF Zero Trust. CIDR 운영팀 확정.</li>
+<li><strong>하드닝·RBAC 확인</strong> — 하드닝 라이브 활성(이미)·정규 관리자 계정 생성·임시비번 교체.</li>
+</ol>
+
+<h3 id="golive-terms">0.3 핵심 정의 (용어)</h3>
+<table>
+<tr><th>용어</th><th>정의</th></tr>
+<tr><td><strong>실서비스 개시(go-live)</strong></td><td>통합/시연 단계 → 실 운영 전환. 벤더 계약 + cutover 완료 시점.</td></tr>
+<tr><td><strong>cutover</strong></td><td>실서비스로 넘기는 1회성 전환 작업(P7·KMS·P8·H2 등). 양팀 freeze 합의 필요.</td></tr>
+<tr><td><strong>P7 (clean-reset)</strong></td><td>운영 DB의 테스트데이터 전면 삭제 + CA(트러스트 루트) 재생성. 단일 트러스트 루트 재기준.</td></tr>
+<tr><td><strong>P8 (시크릿 회전)</strong></td><td>API키·webhook 시크릿 무중단 회전. <em>grace</em>(구·신키 동시 허용)→팀 전환→commit(구키 폐기).</td></tr>
+<tr><td><strong>assuranceLevel</strong></td><td>키 보증 수준. <code>SOFTWARE</code>(SOFT 키) / <code>HSM_ANCHORED</code>(CA 앵커 HSM 상주). 서명·webhook·검증에 표기.</td></tr>
+<tr><td><strong>identityDemo</strong></td><td>실서비스 전(IDV=mock) <strong>포털 본인인증 생략 가능</strong> 여부. 실 PASS 사업자 설정 시 자동 false → 실 본인확인 요구.</td></tr>
+<tr><td><strong>break-glass</strong></td><td>비상 우회 키. 콘솔=<code>CONSOLE_API_KEY</code>(계정 장애 시), 관리=<code>SIGN_ADMIN_API_KEY</code>(ca:admin·users:admin).</td></tr>
+<tr><td><strong>소비자별 webhook 시크릿</strong></td><td>소비자 간 시크릿 격리. <code>erp→ERP_WEBHOOK_SECRET</code>/그 외→<code>HIS_WEBHOOK_SECRET</code>(한 소비자가 타 소비자 webhook 위조 불가).</td></tr>
+<tr><td><strong>하드닝(SECURITY_HARDENING)</strong></td><td>go-live 보안(PII GET 키강제·rate-limit·SSRF·보안헤더). 현재 라이브 활성, H2(admin IP)만 잔여.</td></tr>
+</table>
+
+<h3 id="golive-signals">0.4 상태 확인 신호 (<code>GET /v1/admin/ops-status</code>)</h3>
+<ul>
+<li><code>config.keyCustody.hsm</code>·서명/verify <code>assuranceLevel</code> = <code>HSM_ANCHORED</code> → KMS cutover 완료.</li>
+<li><code>config.identity.provider</code> = <code>pass</code>(mock 아님) → 실 본인확인(포털 <code>identityDemo=false</code>).</li>
+<li><code>config.hardening.enabled=true</code> → 하드닝 활성.</li>
+<li>소비자 활성키 <code>activeKeys</code> = 1(회전 완료) / 2(grace 중).</li>
+</ul>
+<div class="note">상세 실행 절차·팀별 액션·검증 항목은 <strong><code>docs/06-ops/go-live-runbook.md</code></strong>(단일 체크리스트) 및 <code>operations-guide.md</code> 참조. 흐름 전체는 <code>docs/02-design/signing-flows.md</code>.</div>
+
+<h3 id="golive-legal">0.5 법적효력·인증 근거</h3>
+<table>
+<tr><th>구분</th><th>내용</th></tr>
+<tr><td><strong>전자서명 법적효력</strong></td><td>전자동의의 효력 근거 = <strong>전자서명법·민법</strong>. <strong>환자 본인인증(PASS/명의→CI)</strong>이 필요한 이유 = 서명 당사자 동일성 확보. 그래서 실서비스 개시 전 <strong>본인확인 사업자 계약(V1)</strong>이 법적효력의 전제(현재 <code>identityDemo</code>는 시연/내부용).</td></tr>
+<tr><td><strong>EMR 인증제</strong></td><td>복지부·한국보건의료정보원 — <strong>기능성·상호운용성·보안성</strong> 3영역. 보안성=<strong>12항목(F001~F012)</strong>(계정·권한·로그인실패·미사용차단·고유식별정보 암호화·마스킹·비밀번호 일방향·접속기록·수정이력·<strong>전자서명(F010)</strong>·백업·외부보관). 여기서 인증·접근통제는 <strong>시스템 사용자(의료진/직원) 인증</strong>이지 환자 본인인증이 아님.</td></tr>
+<tr><td><strong>핵심 구분</strong></td><td><strong>EMR 인증</strong>(시스템 품질 심사) ↔ <strong>전자동의 법적효력</strong>(환자 본인확인) = 별개 트랙. EMR 인증 통과에 환자 본인인증은 필수 아님 / 전자동의 효력엔 필요.</td></tr>
+<tr><td><strong>암호모듈(KCMVP)</strong></td><td>민간 의료법인 재단 → <strong>KCMVP 검증필 비강제</strong>. 표준 알고리즘(SHA-256+RSA-3072/ECDSA-P256)으로 EMR 보안성 충족. 공공 확장 시 CryptoProvider 추상화로 대비.</td></tr>
+</table>
+<div class="note">항목 문구·항목 수(12 일반/13 의원급)는 종별·인증기준 버전에 따라 가변 — 심사 제출 시 공식 PDF로 최종 확인. 대조표: <code>docs/06-ops/emr-security-mapping.md</code>, 증거가이드: <code>emr-audit-evidence-guide.md</code>.</div>
+
+<h3 id="golive-security">0.6 보안·감사 핵심</h3>
+<ul>
+<li><strong>위변조방지 4중 방어</strong>: ①인증서(X.509 체인) ②서명(CMS/PAdES-LTA) ③감사 해시체인 ④TSA 시점앵커. 내부자 전체 재계산도 TSA 봉인 head 불일치로 탐지. (<code>tamper-evidence-design.md</code>)</li>
+<li><strong>접근통제</strong>: 관리자=RBAC 세션(admin/operator/viewer) · 의료진=HIS SSO(JWKS·aud=sign) · 기계=소비자별 api-key(scope) · 환자/외부=1회용 포털토큰. 모든 행위 actor 귀속 감사(<code>user:</code>/<code>staff:</code>/소비자명). 콘솔 세션은 <strong>서버측 강제 비활동 자동 로그아웃</strong>(기본 15분, <code>SESSION_IDLE_TIMEOUT_MIN</code> — EMR 보안성 F004 미사용 접속차단)·<strong>동시 세션 수 제한</strong>(<code>SESSION_MAX_CONCURRENT</code> 기본 3 — ISMS-P 2.6.3)·로그아웃/비밀번호 변경 시 즉시 폐기.</li>
+<li><strong>키 수탁(HSM 최소화)</strong>: CA 앵커 2키만 HSM(go-live), 말단·TSA는 SOFT → 서명·타임스탬프 건당 HSM 비용 0. 개인키는 crypto-proxy로 앱 분리(운영).</li>
+<li><strong>하드닝</strong>: PII GET 키강제·rate-limit(실IP)·callbackUrl SSRF 차단·보안헤더. <strong>현재 라이브 활성</strong>(H2 admin IP만 잔여).</li>
+<li><strong>감사 무결성 검증</strong>: <code>GET /v1/requests/:id/audit/verify</code> → 체인+TSA 앵커 valid. 접근로그 구조적 JSON(actor·reqId·IP, 비밀 미기록).</li>
+</ul>
+
+<h3 id="golive-channels">0.7 연동 채널 요약</h3>
+<table>
+<tr><th>채널</th><th>대상</th><th>인증</th><th>완료 통지</th></tr>
+<tr><td><strong>HIS 동의서</strong>(EXTERNAL)</td><td>환자(앱/포털)·의료진(SSO) 다자</td><td>api-key + SSO</td><td>webhook(HIS_WEBHOOK_SECRET)</td></tr>
+<tr><td><strong>PACS</strong></td><td>판독보고서(STAFF)·영상동의서(환자)</td><td>api-key + SSO</td><td>폴링(verify)</td></tr>
+<tr><td><strong>ERP 외부계약</strong></td><td>거래처(단독)·다자(거래처+의료진+신규입사)</td><td>api-key(erp)</td><td>webhook(ERP_WEBHOOK_SECRET, 공개 split)</td></tr>
+<tr><td><strong>환자 포털</strong></td><td>원외/외부 fallback</td><td>1회용 토큰 + 본인인증(레벨별)</td><td>—</td></tr>
+</table>
+<p>다중봉투(<code>signers[]</code>)·문서 개정 재동의(<code>supersede</code>·<code>request.superseded</code>)·인증서 수명주기 등 상세 흐름 = <code>docs/02-design/signing-flows.md</code>.</p>
+
+<h3 id="golive-teams">0.8 팀별 개시 액션</h3>
+<table>
+<tr><th>팀</th><th>개시 액션</th></tr>
+<tr><td><strong>HIS</strong></td><td>P7 동기 클린(blockchain_certificates·sign_cert_serial) · P8 신 API키·webhook 시크릿(dual-accept) 전환 · <code>sign.mode=EXTERNAL</code> 유지</td></tr>
+<tr><td><strong>PACS</strong></td><td>P7 STAFF serial 재enroll · P8 신 API키 전환(폴링·webhook 무관)</td></tr>
+<tr><td><strong>ERP</strong></td><td>P7 테스트 계약 정리 · P8 신 API키(.env+recreate)·webhook 시크릿 전환 · (다자 필요 시 <code>signers[]</code>)</td></tr>
+<tr><td><strong>운영(sign)</strong></td><td>V1~V3 주입 · P7/KMS cutover · P8 commit/flip · H2 nginx · RBAC 정규계정·임시비번 교체·하드닝 확인</td></tr>
+</table>
+
+<h3 id="golive-verify">0.9 개시 검증 체크리스트</h3>
+<ul>
+<li>☐ 종단 라운드트립 — HIS·PACS·ERP: <code>enroll→request→sign→verify overall=true→webhook 202</code></li>
+<li>☐ <code>assuranceLevel=HSM_ANCHORED</code>(verify·webhook·ops-status)</li>
+<li>☐ 포털 <code>identityDemo=false</code> + 실 PASS 본인확인 동작</li>
+<li>☐ 감사 무결성 valid(체인+TSA 앵커)·접근로그 actor 귀속</li>
+<li>☐ 콘솔 RBAC 로그인(역할별)·임시 비번 교체</li>
+<li>☐ webhook 시크릿 소비자별 격리(HIS≠ERP)·신 시크릿 검증 202</li>
+<li>☐ H2 admin IP 제한 동작(허용 200·차단 403)</li>
+<li>☐ 침투테스트 Critical 0 · 감사로그 누락 0</li>
+</ul>
+
+<h2 id="overview">1. 개요·아키텍처</h2>
+<p><strong>sign</strong>은 의료기관용 전자동의서·전자서명 트러스트 서비스다. 자체 PKI(2단 CA)·실 전자서명(RSA-3072/SHA-256·CMS/PAdES-LTA)·RFC3161 타임스탬프·감사 해시체인으로 전자동의의 <strong>법적 무결성·부인방지</strong>를 보장한다. HIS(병원정보시스템)·PACS가 API/Webhook로 연동한다.</p>
+<h3>구성 요소</h3>
+<table>
+<tr><th>구성</th><th>역할</th></tr>
+<tr><td><strong>sign-core</strong></td><td>백엔드 API — 인증서 발급·서명·검증·폐기·감사·연동(NestJS)</td></tr>
+<tr><td><strong>sign-web</strong></td><td>관리자 콘솔 + 환자 포털 SPA(Next.js)</td></tr>
+<tr><td><strong>sign-postgres</strong></td><td>영속 저장소(PostgreSQL)</td></tr>
+<tr><td>crypto-proxy / idv-proxy</td><td>(선택) 키수탁·본인확인 분리 프록시(시크릿 격리)</td></tr>
+</table>
+<h3>배포 토폴로지</h3>
+<p>공개 도메인 <code>sign.example.org</code> → Cloudflare(TLS) → nginx(443) → sign-web(SPA)·sign-core(API, same-origin <code>/v1</code>). HIS/PACS는 내부망 <code>http://127.0.0.1:4100/v1</code>(서버↔서버)로 호출. 서명 원본·키·민감정보는 원내망 고정(원내 구축형).</p>
+<div class="note"><strong>트러스트 모델</strong>: sign이 <em>유일한 CA·발급·검증·폐기 주체</em>. HIS/PACS는 발급을 sign에 위임하고 결과(serial)를 읽기전용 미러한다.</div>
+
+<h2 id="start">2. 콘솔 시작하기</h2>
+<p>관리자 콘솔: <code>https://sign.example.org/admin</code>. 로그인은 <strong>관리자 계정(아이디·비밀번호)</strong> 기반이다(C-4 다중관리자 RBAC). 로그인 성공 시 <strong>세션 토큰</strong>(만료 내장, 기본 8h)이 발급되며, 이후 모든 호출은 이 토큰으로 인증된다. 일정 시간(<strong>기본 15분</strong>, <em>내 계정</em>에서 정책 상한 이내로 더 짧게 조정 가능) 화면 조작이 없으면 <strong>자동 로그아웃</strong>되며, 만료 1분 전 경고 창에서 &lsquo;계속 사용&rsquo;으로 연장할 수 있다(EMR 보안성 F004 미사용 접속차단). 콘솔 전용 API 키(<code>CONSOLE_API_KEY</code>)는 <strong>break-glass(비상) 폴백</strong>으로만 유지(로그인 화면의 &lsquo;고급: API 키&rsquo;).</p>
+<h4>역할(role)</h4>
+<table>
+<tr><th>역할</th><th>권한</th></tr>
+<tr><td><strong>관리자(admin)</strong></td><td>전권 — 서명요청·인증서·연동설정·CA 운영·<strong>사용자 관리</strong></td></tr>
+<tr><td><strong>운영자(operator)</strong></td><td>서명요청·인증서 발급/관리(일상 운영). 연동설정·CA·사용자관리 불가</td></tr>
+<tr><td><strong>열람자(viewer)</strong></td><td>읽기 전용 — 운영 데이터 조회만(변경·민감 메뉴 불가)</td></tr>
+</table>
+<p>역할별로 좌측 메뉴가 자동 필터링되고, 서버가 권한을 강제한다(스코프 부족 시 403). 모든 로그인/계정 변경은 감사 스트림(<code>admin:auth</code>·<code>admin:users</code>)에 행위자(<code>user:&lt;아이디&gt;</code>)와 함께 봉인된다.</p>
+<h4>메뉴 구성</h4>
+<table>
+<tr><th>메뉴</th><th>용도</th></tr>
+<tr><td>대시보드</td><td>서명요청 현황·통계</td></tr>
+<tr><td>사용자 관리 / 내 계정</td><td>관리자 계정·역할 관리(admin) / 본인 비밀번호 변경·자동 로그아웃 시간 설정·2FA</td></tr>
+<tr><td>새 서명요청 / 인증서 발급</td><td>요청 생성 / 인증서 enroll</td></tr>
+<tr><td>인증서 목록·관리 / 폐기·OCSP·CRL</td><td>라이프사이클·폐기검증</td></tr>
+<tr><td>STAFF SSO 서명</td><td>의료진 SSO 기반 서명</td></tr>
+<tr><td>연동 설정</td><td>본인인증·발송·키수탁 provider·자격증명</td></tr>
+<tr><td>발송 이력</td><td>알림톡/SMS 발송 내역(연락처 마스킹)</td></tr>
+<tr><td>시스템 상태 / 운영</td><td>구성·readiness·Webhook·CA 회전·만료 배치</td></tr>
+<tr><td>문서·발급 로그 / 인증 행위 로그 / 감사·로그</td><td>접근·행위·권위 감사(해시체인)</td></tr>
+<tr><td>운영 매뉴얼</td><td>본 문서</td></tr>
+</table>
+
+<h3 id="screens">2.2 화면별 안내</h3>
+<p>관리자 콘솔 주요 화면의 구성·용도·작업 순서. (아래 도식은 배치 안내용 와이어프레임이며 실제 화면과 데이터는 다를 수 있다.)</p>
+
+<div class="screen">
+  <div class="cap">📊 대시보드 <span class="url">/admin</span></div>
+  <div class="wire"><div class="bar brand">서명요청 현황</div><div class="row"><div class="box">총 요청 / 완료 / 진행</div><div class="box">Webhook 적체</div><div class="box">CA 시리얼</div></div><div class="row"><div class="box">🔍 검색(제목·문서ID·요청ID·참가자명)</div><div class="box">기간(기본 90일·전체)</div><div class="box">상태 필터</div></div><div class="box">서명요청 목록(요청ID·제목·모드·상태·서명·생성일·만료일·참가자) — 최신순·페이지네이션</div></div>
+  <div class="body"><p><strong>용도</strong>: 전체 서명요청 현황·통계 한눈에. 진행 중/완료/만료 분포와 최근 요청.</p>
+  <p><strong>검색</strong>: 상단 검색창은 <strong>서버측 검색</strong>(전체 집합 대상 — 요청ID·문서ID·제목·참가자명, 페이지를 가로질러 일치) + 상태 필터. 검색 시 total·페이지가 일치 결과 기준으로 갱신된다.</p>
+  <p><strong>팁</strong>: 요청 행을 클릭하면 요청 상세로 이동.</p></div>
+</div>
+
+<div class="screen">
+  <div class="cap">📜 인증서 발급 <span class="url">/admin/certificates</span></div>
+  <div class="wire"><div class="row"><div class="box">ownerType ▾ (PATIENT/STAFF/WITNESS/PROXY)</div><div class="box">subjectDn</div></div><div class="row"><div class="box">본인확인 method ▾ · CI/면허</div><div class="box">유효기간</div></div><div class="row"><span class="btn">발급</span></div></div>
+  <div class="body"><p><strong>용도</strong>: 신규 인증서 발급(주로 HIS가 API로 대행, 콘솔은 예외/수동 발급).</p>
+  <ol class="steps"><li>ownerType 선택 → 유형별 본인확인 필드 표시</li><li>subjectDn·본인확인(PATIENT/PROXY 필수)·면허(STAFF) 입력</li><li>발급 → <code>serialNumber</code>·X.509·assuranceLevel 반환(보관)</li></ol></div>
+</div>
+
+<div class="screen">
+  <div class="cap">🗂 인증서 목록·관리 <span class="url">/admin/certificates-list</span></div>
+  <div class="wire"><div class="bar">🔎 검색 · 상태 필터</div><div class="box">serial · owner · 상태배지 · 만료 · keyCustody &nbsp; [중단][재개][폐기]</div></div>
+  <div class="body"><p><strong>용도</strong>: 발급 인증서 라이프사이클 관리. 행별 인라인 중단/재개/폐기.</p>
+  <p><strong>검색</strong>: 검색창은 <strong>서버측 검색</strong>(전체 — 시리얼·주체·유형·면허). 유형 탭(의료진/환자/대리·증인)·초성 인덱스는 현재 페이지 정제.</p>
+  <p><strong>상태</strong>: ACTIVE / SUSPENDED(가역) / REVOKED(영구) / EXPIRED. <strong>폐기·중단은 향후 서명만 차단</strong>(과거 서명 LTV 유효).</p></div>
+</div>
+
+<div class="screen">
+  <div class="cap">🚫 폐기 / OCSP·CRL <span class="url">/admin/revocation</span></div>
+  <div class="wire"><div class="row"><div class="box">serial 입력 → OCSP 조회</div><div class="box">결과: GOOD/REVOKED/SUSPENDED</div></div><div class="box">CRL 조회(폐기 목록)</div></div>
+  <div class="body"><p><strong>용도</strong>: 폐기 상태 검증(OCSP)·폐기 목록(CRL). 외부 검증자도 공개 조회 가능.</p></div>
+</div>
+
+<div class="screen">
+  <div class="cap">✍️ 새 서명요청 <span class="url">/admin/requests/new</span></div>
+  <div class="wire"><div class="row"><div class="box">문서 파일 → SHA-256 자동계산</div><div class="box">제목·외부문서ID·서명모드(병렬/순차)</div></div><div class="box">참가자(이름·역할·유형·요구 인증수준·<strong>인증서 선택▾</strong>) — 다자 추가</div><div class="row"><span class="btn ghost">+ 인증서 발급</span><span class="btn">요청 생성</span></div></div>
+  <div class="body"><p><strong>용도</strong>: 서명요청 직접 생성(다자). 문서는 업로드 시 해시만 계산(원본 미전송).</p>
+  <ol class="steps"><li>문서 선택 → SHA-256 해시, 제목·외부문서ID 입력</li><li><strong>서명모드</strong>: 병렬(전원 동시) / 순차(위에서부터 1·2·3…) — <strong>실제 게이팅 순서가 모드로 자동 결정</strong>(수동 순서 입력 불필요)</li><li>참가자: 이름·역할·유형·요구 인증수준 + <strong>인증서는 발급 목록에서 선택</strong>(없으면 &lsquo;+ 인증서 발급&rsquo; 새 탭→발급 후 &lsquo;새로고침&rsquo;, 또는 직접 입력)</li><li>생성 → 요청 상세로 이동(발송·서명 진행)</li></ol></div>
+</div>
+
+<div class="screen">
+  <div class="cap">📄 요청 상세 <span class="url">/admin/requests/[id]</span></div>
+  <div class="wire"><div class="bar brand">요청 정보 · 상태 · 버전(v2 · 이전본/최신본 링크)</div><div class="row"><div class="box">참가자·서명 진행</div><div class="box">검증 결과(overall·체인·LTV·감사)</div></div><div class="bar">탭: 감사 | 발송 이력 | Webhook</div><div class="row"><span class="btn ghost">서명링크 발급</span><span class="btn ghost">발송</span><span class="btn ghost">개정 재동의</span><span class="btn ghost">철회</span><span class="btn ghost">감사인증서 PDF</span></div></div>
+  <div class="body"><p><strong>용도</strong>: 단일 요청의 모든 관리. 검증 시각화·감사·발송 이력·Webhook 재시도·철회·감사추적인증서 PDF·문서 개정 재동의.</p>
+  <p><strong>개정 재동의(C-2)</strong>: 동의서 내용이 바뀌면 &lsquo;개정 재동의&rsquo;로 개정 문서(SHA-256 자동계산)를 올려 <strong>새 버전</strong>을 만든다 — 원본은 <code>SUPERSEDED</code>(현행 아님, 기존 서명·LTV·감사 보존), 새 요청은 원본 참가자를 재사용해 다시 서명 수집. 헤더의 버전 배지와 이전본/최신본 링크로 체인을 탐색.</p></div>
+</div>
+
+<div class="screen">
+  <div class="cap">🩺 STAFF SSO 서명 <span class="url">/admin/staff-sign</span></div>
+  <div class="wire"><div class="box">staff-token(SSO JWT) 입력 또는 HIS 발급</div><div class="row"><div class="box">대상 participant</div><span class="btn">서명</span></div></div>
+  <div class="body"><p><strong>용도</strong>: 의료진 SSO 토큰 기반 서명 화면. sign이 토큰(<code>iss=hospitalrun·aud=sign</code>) 검증 후 서명.</p></div>
+</div>
+
+<div class="screen">
+  <div class="cap">🔌 연동 설정 <span class="url">/admin/integrations</span></div>
+  <div class="wire"><div class="row"><div class="box">본인인증(IDV) · provider ▾ · endpoint · apiKey🔒</div></div><div class="row"><div class="box">발송(Notifier) · provider ▾ · 템플릿 · apiKey🔒</div></div><div class="row"><div class="box">키수탁(HSM/KMS) · provider ▾ · region · keyId &nbsp;<span class="btn ghost">cutover 필요</span></div></div><div class="row"><span class="btn">저장</span></div></div>
+  <div class="body"><p><strong>용도</strong>: 벤더 연동 provider·자격증명 입력. 시크릿은 <strong>암호화 저장·평문 미표시</strong>(설정 여부만). IDV·Notifier는 런타임 즉시, HSM은 캡처(cutover).</p>
+  <p><strong>주의</strong>: <code>settings:write</code> 권한(콘솔 키)만 변경 가능. 실 벤더 호출은 계약 후 구현.</p></div>
+</div>
+
+<div class="screen">
+  <div class="cap">📨 발송 이력 <span class="url">/admin/notifications</span></div>
+  <div class="wire"><div class="box">발송시각 · 요청 · 참가자 · 채널 · provider · 결과 · 수신(****1234) · 메시지ID</div></div>
+  <div class="body"><p><strong>용도</strong>: 알림톡/SMS 발송 내역. 수신 연락처는 <strong>끝 4자리만</strong> 표시(평문 미저장). 결과 SENT/FAIL/SKIP.</p></div>
+</div>
+
+<div class="screen">
+  <div class="cap">⚙️ 시스템 상태 / 운영 <span class="url">/admin/system · /admin/maintenance</span></div>
+  <div class="wire"><div class="row"><div class="box">구성(하드닝·키수탁·연동·SSO)</div><div class="box">readiness(DB·CA)</div></div><div class="row"><div class="box">Webhook 적체·요청 분포·CA</div></div><div class="row"><span class="btn ghost">만료 배치</span><span class="btn ghost">Webhook 재시도</span><span class="btn ghost">DEAD 재발송/폐기</span><span class="btn ghost">CA 회전</span></div></div>
+  <div class="body"><p><strong>용도</strong>: 시스템 구성·readiness·운영 메트릭 가시화 + 운영 작업(만료/Webhook 재시도/CA 회전). 연동 설정 변경은 여기 구성에 반영된다.</p></div>
+</div>
+
+<div class="screen">
+  <div class="cap">🧾 로그 <span class="url">/admin/activity-log · /event-log · /audit-log · /wsign-documents</span></div>
+  <div class="wire"><div class="row"><div class="box">문서·발급 로그</div><div class="box">인증 행위 로그</div><div class="box">문서 인증 목록</div><div class="box">감사·로그(해시체인+TSA)</div></div><div class="row"><div class="box">🔍 검색</div><div class="box">기간(from~to)</div><div class="box">이벤트 유형</div><div class="box">시스템 / 상태</div></div></div>
+  <div class="body"><p><strong>용도</strong>: 발급/서명 이벤트·의료진 임상행위 봉인·외부 문서인증·권위 감사(위변조 탐지). 감사는 체인+TSA 무결성 검증 가능. <strong>필터</strong>: 모든 로그 화면에 검색·기간(날짜)·이벤트 유형 + 화면별 추가 필터(문서 인증=시스템, 발급 로그=상태)로 목록이 커져도 좁혀 조회.</p></div>
+</div>
+
+<div class="screen">
+  <div class="cap">📱 환자 포털 <span class="url">/portal/[token]</span> (환자 화면)</div>
+  <div class="wire"><div class="bar brand">동의서 열람</div><div class="box">본인인증 단계 — PASS / 명의 / 대면 (수준별)</div><div class="row"><span class="btn">PASS 본인확인</span><span class="btn ghost">서명</span></div><div class="box">완료 · 결과</div></div>
+  <div class="body"><p><strong>용도</strong>: 원외 환자 서명(모바일 우선). 열람 → <strong>본인인증(requiredIdentityLevel별)</strong> → 서명 → 결과. 토큰은 48h 단일사용.</p></div>
+</div>
+
+<div class="screen">
+  <div class="cap">🔑 API 키 회전·소비자 관리 <span class="url">/admin/consumers</span> (CA Admin 키 필요)</div>
+  <div class="wire"><div class="row"><span class="btn">새 소비자 등록</span><span class="btn ghost">새로고침</span></div><div class="box">소비자 목록 — name · 시스템/등록 · scopes · activeKeys(1=정상/2=회전중) · status</div><div class="row"><span class="btn">키 회전(rotate)</span><span class="btn ghost">commit</span><span class="btn ghost">관리(등록 소비자)</span></div><div class="box">새 키 1회 표시(복사)</div></div>
+  <div class="body"><p><strong>소비자 등록</strong>: 신규 기계 연동(HIS/PACS/ERP/외부) 키를 콘솔에서 직접 발급. 이름 + 스코프(체크박스) 지정 → <strong>키 1회 표시</strong>(복사 필수) → 재기동 후에도 유지. 부여 가능 스코프는 <em>기계 권한만</em>(<code>requests:write</code>·<code>certificates:write</code>·<code>settings:write</code>·<code>approval:write</code>·<code>documents:read</code>) — 민감 권한(ca:admin·users:admin)은 부여 불가(권한상승 방지). 등록 소비자는 <strong>관리</strong>로 스코프 편집·일시중지/재개 가능.</p>
+  <p><strong>키 회전(P8)</strong>: <strong>rotate</strong>(신규키 grace) → 소비자 시스템 갱신 → <strong>commit</strong>(구키 폐기). 자동생성 키는 1회만 표시. 시스템(env 시드) 소비자는 회전만 가능(스코프는 코드/.env 소유).</p>
+  <p><strong>주의</strong>: ca:admin 권한 필요(관리자 계정 또는 sign-admin 키).</p></div>
+</div>
+
+<div class="screen">
+  <div class="cap">📄 문서 인증 목록 <span class="url">/admin/wsign-documents</span> (감사·로그)</div>
+  <div class="wire"><div class="bar">🔍 검색 · 이벤트 · 시스템 · 기간</div><div class="box">시각 · 문서 · 문서ID · 시스템 · 이벤트 · 문서해시 · 무결성(체인)</div><div class="box">문서 클릭 → 상세(어테스테이션 이력 · 문서해시 전체 · 해시체인 무결성)</div></div>
+  <div class="body"><p><strong>용도</strong>: 외부 문서인증 연동(예: weRB <code>werb-docauth</code>)이 <code>POST /v1/audit-events</code>로 봉인한 <strong>문서 어테스테이션</strong>(문서 해시·시각·시스템)을 문서별로 흩어진 스트림에서 하나의 목록으로 통합 조회. 문서마다 해시체인으로 위변조 탐지, 문서 클릭 시 어테스테이션 이력·문서해시 전체·무결성 배지 확인. 접근 권한 <code>requests:write</code>.</p>
+  <p><strong>참고(전자결재)</strong>: sign 내부 전자결재(상신→결재, <code>/v1/approvals</code> — 결재자별 PKI 서명 + 통합 인증로그)는 구현·플래그(<code>ELECTRONIC_APPROVAL</code>)가 보존돼 있으나, 실서비스 결재 워크플로우는 외부 문서인증(weRB)이 담당하므로 <strong>콘솔 메뉴에서는 숨김</strong>. 결재자별 법적 서명 보관이 필요해지면 메뉴 복원으로 활성.</p></div>
+</div>
+
+<div class="screen">
+  <div class="cap">🔐 로그인 <span class="url">/admin/login</span></div>
+  <div class="wire"><div class="bar brand">아이디 / 비밀번호</div><div class="row"><span class="btn">로그인</span></div><div class="box">고급: API 키로 로그인 (break-glass)</div></div>
+  <div class="body"><p><strong>용도</strong>: 관리자 계정 로그인 → 세션 토큰 발급(기본 8h 만료). break-glass 모드는 API 키(<code>CONSOLE_API_KEY</code> 등) 직접 입력.</p></div>
+</div>
+
+<div class="screen">
+  <div class="cap">👥 사용자 관리 <span class="url">/admin/users</span> (관리자 전용)</div>
+  <div class="wire"><div class="row"><div class="box">새 계정 — 아이디 · 비밀번호 · 역할 ▾</div><span class="btn">계정 생성</span></div><div class="box">계정 목록 — 아이디 · 역할 ▾ · 상태 · 마지막 로그인 &nbsp;[비밀번호 재설정][비활성화]</div></div>
+  <div class="body"><p><strong>용도</strong>: 관리자 계정 생성·역할 변경·활성/비활성·비밀번호 재설정. <strong>users:admin</strong> 권한(admin 역할 또는 sign-admin break-glass 키)만 접근.</p>
+  <ol class="steps"><li>아이디(영숫자.-_ 3~40자)·초기 비밀번호(8자+)·역할 → 생성</li><li>행에서 역할 드롭다운으로 즉시 변경, 비활성화 토글</li><li>비밀번호 재설정 → 새 비밀번호를 대상자에게 안전 채널로 전달</li></ol>
+  <p><strong>안전장치</strong>: 마지막 활성 admin은 강등·비활성화 불가(409). 비활성 계정은 기존 세션 토큰도 즉시 무효(401).</p></div>
+</div>
+
+<div class="screen">
+  <div class="cap">🙋 내 계정 <span class="url">/admin/account</span></div>
+  <div class="wire"><div class="box">아이디 · 역할 · 권한(scope)</div><div class="row"><div class="box">현재 / 새 / 새 확인 비밀번호</div><span class="btn">변경</span></div><div class="row"><div class="box">⏲ 자동 로그아웃 시간 — 1~정책상한(분)</div><span class="btn">적용</span></div><div class="row"><div class="box">🔐 2단계 인증 — QR·수동키·6자리 코드·복구코드</div><span class="btn">설정/해제</span></div></div>
+  <div class="body"><p><strong>용도</strong>: 본인 계정 정보 확인·비밀번호 변경 + <strong>자동 로그아웃(비활동) 시간 설정</strong> + <strong>2단계 인증(2FA·TOTP)</strong> 등록/해제(인증앱 QR·복구코드). <strong>자동 로그아웃</strong>: 조직 정책 상한(<code>SESSION_IDLE_TIMEOUT_MIN</code>, 기본 15분) <strong>이내에서 본인이 더 짧게</strong> 지정 가능(보안상 더 길게는 불가, 정책값으로 클램프). <strong>개발모드</strong>(하드닝 미적용)에선 개발 편의로 <strong>최대 2시간</strong>까지 노출되나, <strong>실서비스(하드닝)에선 정책 상한 옵션만 노출</strong>(2시간 등 비표시·API 강제 시도도 정책으로 클램프). 변경은 <strong>서버가 즉시 강제</strong>(세션별 idleMs)하고 감사(<code>IDLE_TIMEOUT_CHANGED</code>) 봉인. 자세한 절차·트러블슈팅은 §7.6.</p></div>
+</div>
+
+<h2 id="cert">3. 인증서 등록·관리</h2>
+<h3 id="cert-enroll">3.1 발급(등록)</h3>
+<p>인증서 발급(enroll)은 <strong>sign이 키쌍을 생성·개인키를 수탁</strong>한다. 호출자(또는 콘솔)는 공개키를 보내지 않으며 개인키를 보유하지 않는다.</p>
+<table>
+<tr><th>ownerType</th><th>본인확인(method)</th><th>유효기간</th><th>비고</th></tr>
+<tr><td>PATIENT(환자)</td><td>PASS / MOBILE_NAME / INPERSON <strong>필수</strong></td><td>365일</td><td>비대면/대면 본인확인 강결합</td></tr>
+<tr><td>STAFF(의료진)</td><td>STAFF_SSO + 면허번호</td><td>365일</td><td>HIS SSO 신뢰</td></tr>
+<tr><td>WITNESS(외부 입회인)</td><td>대면(INPERSON)</td><td>1일</td><td>단기 임시</td></tr>
+<tr><td>PROXY(대리/보호자)</td><td>대리인 본인 PASS/명의</td><td>365일</td><td>관계·대상(환자) 봉인</td></tr>
+</table>
+<p>콘솔: <strong>인증서 발급</strong> 메뉴 → ownerType·주체정보(subjectDn)·본인확인·면허 입력 → 발급. 결과로 <code>serialNumber</code>·X.509 PEM·<code>assuranceLevel</code> 발급. 모든 발급은 <code>CERT_ISSUED</code> 감사(해시체인) 기록.</p>
+<div class="warn"><strong>멱등 아님</strong>: 발급은 매번 새 인증서. 발급받은 <code>serial</code>을 보관해 재사용하라(의료진은 SSO 토큰 <code>sign_cert_serial</code> 클레임으로 재사용).</div>
+
+<h3 id="cert-staff">3.2 신규 입사자(의료진) 온보딩 발급</h3>
+<p>의료진 인증서는 <strong>직원이 포털에서 직접 신청하지 않는다.</strong> HIS(EMR)가 <strong>온보딩 시점에 sign enroll API를 서버↔서버로 1회 대행 호출</strong>하고, 직원 계정에 <code>serial</code>을 저장(<code>user.signCertSerial</code>) → 이후 SSO 토큰의 serial로 재사용한다.</p>
+<pre><code>[온보딩 1회]  HIS → POST /v1/certificates/enroll
+              (ownerType=STAFF, subjectDn, licenseNumber, identity.method=STAFF_SSO)
+            → sign: X.509 발급 → serial 반환 → HIS가 user에 매핑
+[이후]       의료진은 포털/SSO로 *서명만* (인증서 신청 단계 없음)</code></pre>
+<p>운영자가 콘솔 <strong>인증서 발급</strong>에서 수동 발급도 가능(예: 예외 처리). 발급 시점은 온보딩 자동 또는 첫 서명 시 lazy(ensureStaffCert) 모두 가능.</p>
+
+<h3 id="cert-manage">3.3 목록·중단·폐기·폐기검증</h3>
+<p>콘솔 <strong>인증서 목록·관리</strong>: 검색·상태배지·인라인 관리. 상태는 4종.</p>
+<table>
+<tr><th>상태</th><th>의미</th><th>작업</th></tr>
+<tr><td><span class="pill ok">ACTIVE</span></td><td>유효</td><td>—</td></tr>
+<tr><td><span class="pill warn">SUSPENDED</span></td><td>일시 중단(가역)</td><td>중단/재개 — 향후 서명만 차단</td></tr>
+<tr><td><span class="pill" style="background:#fee2e2;color:#991b1b">REVOKED</span></td><td>영구 폐기</td><td>되돌릴 수 없음</td></tr>
+<tr><td><span class="pill muted">EXPIRED</span></td><td>만료(자동)</td><td>—</td></tr>
+</table>
+<div class="note"><strong>서명 시점 기준</strong>: 폐기/중단은 <em>향후 서명만</em> 차단한다. 과거 서명은 서명 시점(TSA genTime)에 유효했으면 그대로 유효(LTV) — 인증서가 나중에 폐기돼도 그 서명의 법적효력은 보존된다.</div>
+<p>폐기검증: <strong>폐기/OCSP·CRL</strong> 메뉴 — <code>GET /v1/ocsp/:serial</code>(GOOD/REVOKED/SUSPENDED), <code>GET /v1/crl</code>(공개). 모든 폐기/중단/재개는 <strong>행위자(actor)</strong>가 감사에 봉인된다.</p>
+
+<h2 id="request">4. 서명요청·서명</h2>
+<p>콘솔 <strong>새 서명요청</strong> 또는 HIS facade(<code>POST /v1/sign-requests</code>)로 생성. 문서 해시(SHA-256, 64hex)·제목·참가자(다자 순차)·서명모드를 지정한다. 참가자는 <code>signOrder</code>로 순차 게이팅(앞 순번 완료 후 다음 활성).</p>
+<table>
+<tr><th>채널</th><th>경로</th><th>대상</th></tr>
+<tr><td>DIRECT</td><td>HIS 앱 → <code>/v1/sign/:pid/submit</code>(키)</td><td>원내·앱</td></tr>
+<tr><td>PORTAL</td><td>sign 포털 <code>/portal/:token</code></td><td>원외·앱 미설치</td></tr>
+<tr><td>STAFF</td><td><code>/v1/sign/staff</code>(SSO Bearer)</td><td>의료진</td></tr>
+</table>
+<p>요청 상세에서 <strong>발송·철회·검증·감사·발송이력·Webhook</strong> 관리. 철회(<code>withdraw</code>)·만료(<code>expire</code> 배치)는 이후 서명을 차단한다.</p>
+
+<h3 id="portal">4.1 환자 포털·본인인증</h3>
+<p>환자 포털(<code>/portal/:token</code>, 48h 단일사용 토큰)은 열람 → <strong>본인인증</strong> → 서명 → 결과 흐름. 본인인증 단계는 참가자의 요구 인증수준(<code>requiredIdentityLevel</code>)에 따라 분기한다.</p>
+<table>
+<tr><th>수준</th><th>UX</th></tr>
+<tr><td>PASS</td><td>"PASS 본인확인" 버튼(현재 mock — 실 PASS 표준창/콜백 연동 자리)</td></tr>
+<tr><td>MOBILE_NAME</td><td>휴대폰 명의 인증(이름·CI·전화)</td></tr>
+<tr><td>INPERSON</td><td>대면 확인(직원 입회)</td></tr>
+<tr><td>APP_STEPUP</td><td>고위험 동의서 — 서명 직전 재인증</td></tr>
+</table>
+<div class="warn">실 PASS는 비동기(앱 푸시 → 콜백)다. 사업자 계약 후 <code>verify()</code> 콜백만 연결하면 현재 UI·흐름 그대로 실연동된다.</div>
+
+<h3 id="notify">4.2 발송·이력</h3>
+<p>요청 상세에서 참가자에게 서명 링크 발송(알림톡/SMS). 수신 연락처는 <strong>평문 저장하지 않고 끝 4자리만 마스킹</strong> 보관한다. <strong>발송 이력</strong> 메뉴에서 전체 발송 내역(발송시각·채널·provider·결과·마스킹 수신·메시지ID) 조회. 요청 상세에도 해당 요청의 발송 이력 탭이 있다.</p>
+
+<h3 id="contracts">4.3 일반 전자계약(행정·일반 계약) — "전자계약" 메뉴</h3>
+<p>근로·용역·협력업체 등 <strong>원내 행정 계약</strong>을 준비→발송→체결→관리하는 트랙(v1.10.0). 환자 동의서(HIS 연동)와 별개이며, 계약 원본 PDF는 <strong>원내에 AES-256-GCM 암호화로 영구 보관</strong>되고 서명은 동일한 PKI 실서명+TSA로 봉인된다. 기능은 <code>GENERAL_CONTRACTS</code> 플래그로 게이팅되며 비활성 시 메뉴가 자동 숨겨진다.</p>
+<table>
+<tr><th>메뉴</th><th>용도</th></tr>
+<tr><td><strong>계약 현황</strong></td><td>랜딩 — 진행·체결·만료 임박 카드 + 처리 필요 목록(내 서명 차례·발송 대기·만료 임박 독촉)</td></tr>
+<tr><td><strong>계약함</strong></td><td>전체 목록 — 상태 탭·검색·라벨 필터·기간 필터·현재 단계·CSV. 🔒=접근암호 설정 계약</td></tr>
+<tr><td><strong>새 계약</strong></td><td>계약서 PDF 선택(SHA-256 자동 계산·원본 자동 업로드) → 서명자 구성(외부=이메일 / 내부=콘솔 계정, 순차) → 접근암호(선택)·라벨. <strong>프리셋</strong>으로 자주 쓰는 요청 구성(제목·서명자열·서명 방식·라벨·분류)을 저장/불러오기(기관 공용 — 문서·접근암호 값은 저장 안 됨, 동일 이름 덮어씀. <strong>수정은 누구나, 삭제는 만든 사람 또는 관리자만</strong> 가능하며 생성·수정·삭제는 관리자 감사에 남습니다), <strong>'생성 후 바로 발송'</strong> 체크 시 생성과 동시에 외부 서명자에게 이메일 전송(원플로우). 계약 상세 서명자 탭의 <strong>진행 타임라인</strong>에서 생성→발송→서명(단계별)→교부 시각을 한눈에 확인</td></tr>
+<tr><td><strong>첨부 문서</strong></td><td>계약 상세 '첨부' 탭에서 <strong>열람용 부속 문서</strong>(견적서·사업자등록증 등, PDF·PNG·JPEG 파일당 10MB·계약당 10건)를 첨부. 서명 대상은 아니며 각 첨부의 SHA-256이 감사 이력에 봉인된다. <strong>추가·삭제는 작성(미발송) 상태에서만</strong> 가능(발송 후 불변 — 서명자 열람 정합). 외부 서명자는 포털에서, 체결 후에는 교부 링크에서 첨부를 열람·다운로드(전건 접근 기록)</td></tr>
+<tr><td><strong>계약 서식 권한</strong></td><td>서식 <strong>생성·편집·복제·삭제·기본값 복원</strong>은 <strong>관리자(admin) 전용</strong>입니다(전용 권한 <code>contracts:templates</code>). 서식 본문은 이후 만들어지는 모든 계약의 문안을 좌우하므로 일반 계약 작성 권한(운영자·연동 기계키)과 분리했습니다. 운영자에게는 편집 버튼이 표시되지 않으며, <strong>서식으로 계약 작성</strong>은 그대로 가능합니다.</td></tr>
+<tr><td><strong>계약 서식</strong></td><td>내장 샘플 서식 36종(근로 3·의료인력 2·용역 13·임대차 2·구매 2·보안 2·협약 2·<strong>보건행정 10</strong>) — 기본 실무 서식에 더해 <strong>의료기관 특화 계약서</strong>(진료협력 협약, 임상시험 수탁(CRO), 건강검진 위탁, 전공의 위탁수련, 의료정보시스템(EMR/OCS/PACS) 유지보수, 의료기기 유지보수, 방사선 안전관리 위탁, 세탁물 위탁처리, 보안·경비 용역, 주차장 위탁운영)을 포함. <strong>보건행정</strong> 카테고리에는 의료기관이 <strong>보건소·보건복지부 등에 제출하는 신고·보고·공문</strong>(의료기관 개설신고·개설허가신청·휴폐업신고·개설사항 변경신고·진단용 방사선 발생장치 설치신고·감염병 발생신고·비급여 진료비용 보고·요양기관 현황신고·의료폐기물 배출자 신고·범용 행정공문)을 포함하며, 개설자(기관장) 1인 전자서명으로 작성에서 선택 → 필드 입력·본문 자유 수정. <strong>각 서식은 실무 활용 가능한 상세 조항(12~20개조, 근로기준법·개인정보보호법 제26조·폐기물관리법·약사법·상가임대차보호법 등 관련 법령 인용)으로 구성</strong>. <strong>기관 맞춤 서식은 콘솔에서 직접 등록·편집·삭제</strong>(계약 서식 화면 → '새 서식 만들기' 또는 내장 서식 '복제해 편집' → 필드 정의·본문 작성·미리보기). 내장 서식도 <strong>직접 편집 가능</strong>(코드 원본은 보존되는 기관 오버라이드 방식 — '기본값 복원'으로 언제든 원본 복귀). 모든 편집은 <strong>서식별 버전 이력</strong>(최근 20건)으로 남아 이전 버전으로 되돌릴 수 있고, 편집기는 본문 {{필드}}↔필드 정의 불일치를 <strong>실시간 검증</strong>(미정의 시 저장 차단)하며 필드 자동 추출·서명란/입력란 마커 삽입을 지원. 본문 에디터는 제목·굵게 외에 <strong>정렬(좌/중/우)·불릿/번호 목록·표(행·열 편집)</strong>를 지원하고 모두 PDF 조판에 그대로 반영 → <strong>PDF 미리보기 위에서 서명란·입력란을 클릭·드래그로 배치</strong>(서명자별 색상, 새 계약의 업로드 PDF에도 동일) → 한글 PDF 생성 후 서명자 지정까지 한 흐름. 서명 방식은 <strong>순차(순서 지정·↑↓ 변경) 또는 동시(전원 병렬)</strong> 선택. 샘플은 참고용 표준 문안 — 중요 계약은 법률 검토 권장</td></tr>
+<tr><td><strong>카테고리 관리</strong></td><td>체결 완료된 전자계약을 <strong>카테고리(근로·의료인력·용역·임대차·구매·보안·협약·기타)별로 분류·관리</strong>. 계약 생성 시 카테고리 지정(서식으로 작성 시 서식 분류 자동 적용), 계약 상세에서 재분류 가능. ‘카테고리 관리’ 화면에서 카테고리별 체결완료·전체 건수 집계 → 선택 시 해당 분류의 계약 목록으로 이동. 계약함에서도 카테고리 칩·필터로 조회.</td></tr>
+<tr><td><strong>발송 주소록</strong></td><td>자주 발송하는 외부 상대방 이메일을 저장·검색·관리(발송 시 자동완성·자동 학습). 새 계약 이메일 입력 시 자동완성.</td></tr>
+<tr><td><strong>서명 UX</strong></td><td>계약 서명 시 <strong>손글씨 사인</strong>(마우스·터치·태블릿) 입력 — PKI 실서명이 법적효력, 손글씨는 행위 증거로 암호화 기록. 서명 포털은 <strong>휴대폰·PC 반응형</strong> 자동 최적화. 계약함 제거=<strong>보관 처리</strong>(숨김·복원 가능, 제거 로그 기록). 내부 계정에 이메일 속성.</td></tr><tr><td><strong>완료문서 QR 검증</strong></td><td>체결(완료)된 계약 문서의 <strong>각 페이지 하단에 검증 QR코드</strong>가 자동 삽입됩니다. QR을 스캔하면 <strong>공개 검증 페이지</strong>(로그인 불요)로 연결되어 계약 진위·서명 검증 결과(PKI 서명 유효성·감사체인·서명자·체결시각·문서해시)와 <strong>계약 문서(PDF) 확인</strong>이 가능합니다. 검증 링크는 계약 상세 ‘서명 검증’ 탭에서도 확인·공유할 수 있습니다.</td></tr>
+<tr><td><strong>내부 서명자 알림</strong></td><td>계약 서명 차례가 된 <strong>내부 서명자(콘솔 계정)</strong>에게도 이메일로 서명 요청을 자동 발송. 로그인은 콘솔 계정(username), 알림은 이메일로 분리. 새 계약 폼에서 내부 서명자별 <strong>알림 이메일</strong>을 입력하거나(미입력 시 계정에 등록된 이메일 자동 사용), 이메일이 전혀 없으면 콘솔에서만 서명. 발송(현재 차례)·이전 단계 완료 시 자동 트리거, 발송이력·감사(CONTRACT_INTERNAL_NOTIFIED) 기록.</td></tr>
+<tr><td><strong>알림·리마인더</strong></td><td>자동 독촉 정책(발송 후 N일 미서명 재발송·만료 24시간 전 경고 1회) 확인·즉시 실행, 계약 발송이력</td></tr>
+</table>
+<p><strong>체결 흐름</strong>: ① 새 계약 작성 → ② 상세에서 [발송] — 외부 서명자에게 이메일로 포털 링크 전송(접근암호는 <em>별도 채널</em>로 전달) → ③ 외부 서명자: 링크 접속 → 접근암호 입력(<strong>5회 연속 오류 시 해당 계약 10분 잠금</strong> — 무차별 대입 방지, 잠금 이력 봉인) → 문서 확인(동의 게이트) → <strong>배정 입력란 직접 기재</strong>(입력란(FIELD)이 배치된 경우 필수 — 기재값은 암호화 보관·SHA-256 감사 봉인되고 원본 해시는 불변, 문서 표시본·완료 교부본에 해당 위치로 합성 표시. 입력란에 <strong>타입</strong>(텍스트·날짜·금액·숫자)을 지정하면 형식을 검증하고 <strong>날짜는 YYYY-MM-DD, 금액은 세 자리 구분</strong>으로 정규화해 봉인·표시한다. 값이 칸보다 길면 자동 줄바꿈→글자 축소 순으로 맞추고, 그래도 넘칠 때만 말줄임 표시) → 서명 → ④ 내 차례가 되면 상세에서 [내부 서명](지정 계정 본인만) → ⑤ 체결 완료 시 서명자에게 <strong>완료 문서+감사추적인증서 다운로드 링크</strong>(만료형, 기본 72시간)가 자동 발송된다([교부 링크 재발급] 가능).</p>
+<div class="note"><strong>Webhook DEAD 재발송</strong>: 수신 시스템 장애·주소 오류로 재시도(8회)가 소진된 통지는 <strong>DEAD</strong> 로 남고 자동 배치에서 제외됩니다. 시스템 화면(<code>/admin/system</code>)의 <strong>Webhook 현황</strong>에서 <strong>[DEAD 목록 보기]</strong> 로 대상·수신 URL·시도 횟수를 확인하고, 수신 측을 고친 뒤 <strong>[DEAD 재발송]</strong> 을 실행하세요. 재발송은 현재 시크릿으로 다시 서명하고 <code>eventId</code> 를 보존하므로, 수신 측이 멱등 처리하면 중복 반영되지 않습니다. 수신 시스템이 <strong>철수·폐지</strong>돼 재발송이 무의미한 건은 <strong>[DEAD 폐기]</strong> 로 적체·경고에서 제외합니다 — <strong>사유 입력이 필수</strong>이며 레코드는 삭제되지 않고 <code>DISCARDED</code> 로 남아, 누가·언제·왜 폐기했는지가 해당 요청의 감사 체인에 봉인됩니다(되돌리기는 제공하지 않습니다).</div>
+<div class="warn"><strong>⚠️ 연동 수신 주소가 바뀌었을 때는 [DEAD 재발송]만으로 끝나지 않습니다</strong>: 통지 주소는 <strong>요청을 만든 시점의 주소가 그대로 복사</strong>되어 저장됩니다. 그래서 연동 시스템이 수신 경로를 고쳐도, <strong>그 전에 만들어진 요청</strong>은 만료·완료될 때마다 옛 주소로 발송돼 DEAD 가 <strong>계속 새로 생깁니다</strong>(2026-08-08 실제 사고 — 같은 경보가 16시간 반복). 재발송으로 목록이 비었는데 다음 날 또 쌓인다면 이 경우이며, 저장된 요청의 주소 정정(<code>POST /v1/maintenance/callback-retarget</code>, 운영 API)이 함께 필요합니다 — 시스템 담당자에게 알리세요.</div>
+<div class="note"><strong>수신처 오기입 복구</strong>: 외부 서명자 이메일을 잘못 넣었더라도 <strong>아직 서명하지 않은 서명자</strong>라면 철회·재발행 없이 수신처만 고칠 수 있습니다(연동 시스템 경유). 정정하는 순간 <strong>기존에 보낸 링크는 즉시 무효화</strong>되므로(잘못된 수신자 차단), 정정 후 [발송] 또는 [독촉]으로 새 링크를 보내면 됩니다. 이미 서명한 사람은 다시 서명하지 않아도 됩니다.</div>
+<div class="note"><strong>다운로드 파일명</strong>: 완료 문서·감사추적인증서 파일명은 <code>제목_구분_날짜_식별자.pdf</code> 형식입니다(예: <code>정규직 근로계약서_체결본_20260728_68db9227.pdf</code>). 여러 계약 파일을 한 폴더에 받아도 구분·정렬됩니다.</div>
+<div class="note"><strong>교부 링크 셀프 서비스</strong>: 수신자는 교부 화면에서 <strong>기한을 1회 연장</strong>할 수 있고(만료 전에만 가능 — 만료 후에는 발송자가 [교부 링크 재발급]), 담당자·보관용 주소로 <strong>문서를 전달</strong>할 수 있습니다(링크당 3회). 전달은 파일 첨부가 아니라 <strong>새 다운로드 링크 발송</strong>이며, 연장·전달 사실과 받는 주소(마스킹)는 계약 이력에 봉인됩니다.</div>
+<div class="note"><strong>교부 파일이 2개인 이유</strong>: 체결 완료 시 <strong>완료 문서</strong>(서명이 반영된 계약서 본문 — 각 장 QR 로 진위 확인)와 <strong>감사추적인증서</strong>(문서 해시·서명자·인증서·서명 이력 해시체인을 담은 증거 문서)를 함께 교부합니다. 감사추적인증서는 <strong>파일 자체가 전자서명(PAdES)으로 봉인</strong>되어 있어, 두 PDF 를 하나로 합치면 그 서명이 깨집니다 — <strong>각각 보관</strong>하도록 안내하세요. 계약서만 제3자에 제출해야 하는 경우에도 완료 문서만 전달하면 됩니다(QR 로 진위 확인 가능).</div>
+<div class="note"><strong>개인정보 보호(공개 검증·프리셋)</strong>: 완료 문서 QR의 <strong>공개 검증 페이지</strong>는 진위 확인 정보(서명 검증·해시·서명자)를 누구나 볼 수 있지만, <strong>서명자가 직접 기재한 정보(계좌번호·주소 등)가 포함된 계약은 문서 자체를 공개하지 않습니다</strong> — 사본이 필요하면 만료형 <strong>교부 링크</strong>를 사용합니다. <strong>새 계약 프리셋</strong> 목록의 상대방 이메일도 마스킹되며, 프리셋을 실제로 적용할 때만 원문이 채워집니다.</div>
+<div class="note"><strong>첨부 보존</strong>: 계약 첨부는 <strong>기본적으로 영구 보관</strong>(계약 원본과 동일)입니다. 기관 보존연한이 정해져 있으면 <code>CONTRACT_ATTACH_RETAIN_DAYS</code> 를 설정해 <strong>종결된 계약</strong>(체결·만료·철회)의 첨부만 자동 파기할 수 있으며, 파기 사실은 계약 이력에 봉인됩니다(진행 중 계약은 대상이 아닙니다).</div>
+<div class="note"><strong>이력·무결성</strong>: 상세의 <strong>이력 탭</strong>에 생성·발송·독촉·접근암호 성공/실패·서명·교부가 해시체인으로 봉인되며(체결 시 TSA 앵커), 검증 탭에서 서명 전체 검증(overall)을 확인한다.</div>
+<div class="warn"><strong>이메일 발송 채널</strong>: 원내 SMTP(<code>SMTP_URL</code>/<code>SMTP_FROM</code> 또는 연동 설정) 구성 전에는 provider=mock으로 <strong>실제 메일이 발송되지 않는다</strong>(알림·리마인더 화면에서 채널 상태 확인). 운영자 역할(operator)은 전자계약·내 계정·운영 매뉴얼 메뉴만 사용한다.</div>
+
+<h2 id="integrations">5. 연동 설정 (/admin/integrations)</h2>
+<p>외부 벤더 연동을 <strong>콘솔에서 입력</strong>하는 런타임 설정. 자격증명은 <strong>AES-256-GCM으로 암호화</strong> 저장되며 화면에 평문으로 다시 표시되지 않는다(설정 여부만 표시).</p>
+<table>
+<tr><th>연동</th><th>provider</th><th>입력</th><th>적용</th></tr>
+<tr><td>본인인증(IDV)</td><td>mock / pass / mobile-name</td><td>endpoint·apiKey</td><td><span class="pill ok">런타임</span> 즉시</td></tr>
+<tr><td>발송(Notifier)</td><td>mock / kakao / sms</td><td>endpoint·templateId·apiKey·senderKey</td><td><span class="pill ok">런타임</span> 즉시</td></tr>
+<tr><td>키수탁(HSM/KMS)</td><td>none / aws-kms / pkcs11 …</td><td>region·keyId·module·pin</td><td><span class="pill warn">캡처</span> cutover 필요</td></tr>
+</table>
+<div class="note"><strong>프록시 형태</strong>: provider를 실 벤더로 바꾸고 자격증명을 입력하면 무재배포로 연동이 "무장"된다. 단 실제 벤더 호출(<code>verify()</code>/<code>send()</code>)은 <strong>사업자 계약·API 규격 확보 후</strong> 구현한다(현재는 스텁).</div>
+<div class="warn"><strong>HSM/KMS는 캡처만</strong>: 키 수탁은 런타임 핫스왑이 불가하다(이미 발급된 인증서의 키 일관성). 실제 적용은 재배포(cutover)로 한다. <code>settings:write</code> 스코프(콘솔·sign-admin)만 변경 가능, HIS/PACS 기계키는 불가.</div>
+
+<h2 id="logs">6. 보안·로그·감사</h2>
+<p>의료/IT 전자서명의 보안은 <strong>다층 방어(defense-in-depth)</strong> — 인증·인가, 암호화, 키 경계, 하드닝, 감사·위변조방지가 중첩된다. 아래는 각 도메인별 통제.</p>
+
+<h3 id="sec-authz">6.1 인증·인가 (접근통제)</h3>
+<table>
+<tr><th>주체</th><th>인증</th><th>인가</th></tr>
+<tr><td>관리자(사람)</td><td>로컬 계정 ID/PW(scrypt) → <strong>세션 토큰</strong>(HMAC·만료)</td><td>역할 RBAC: admin(전권)·operator(서명/인증서)·viewer(읽기). 메뉴·스코프 자동 제어</td></tr>
+<tr><td>의료진</td><td><strong>HIS SSO</strong> JWT(JWKS 검증)</td><td><code>iss=hospitalrun</code>·<code>aud=sign</code> 강제, <code>sub↔externalSignerRef</code> 바인딩(명의도용 차단), role allow-list(설정형)</td></tr>
+<tr><td>기계(HIS/PACS/ERP)</td><td><code>x-api-key</code>(소비자별)</td><td>scope(<code>requests:write</code>·<code>certificates:write</code>·<code>ca:admin</code>·<code>users:admin</code>·<code>settings:write</code>)</td></tr>
+<tr><td>환자/외부</td><td>1회용 포털 토큰(48h·단일사용)</td><td>본인확인 강결합(레벨별), 순차 게이팅</td></tr>
+</table>
+<ul>
+<li><strong>C1 무인증 서명 차단</strong>: 직접 서명 제출(<code>/v1/sign/:pid/submit</code>)에 키 강제 — participantId만으로 서명 위조 불가.</li>
+<li><strong>이중 서명 가드</strong>: 기존 서명 존재 시 <code>ALREADY_SIGNED</code>, 포털 토큰 단일사용 — 중복/재서명 차단.</li>
+<li><strong>테넌트 격리</strong>: 감사 행위 조회는 소비자별 필터(자기 system만), ca:admin·console만 전체.</li>
+</ul>
+
+<h3 id="sec-crypto">6.2 암호화·데이터 보호</h3>
+<ul>
+<li><strong>서명 알고리즘</strong>: SHA-256 + RSA-3072 / ECDSA-P256(표준). CMS(CAdES-BES) + PAdES-LTA(LTV).</li>
+<li><strong>키 보관</strong>: SOFT 키는 <strong>AES-256-GCM</strong>으로 봉인(FileVault, 마스터키). 연동 설정 시크릿도 <strong>SecretBox(AES-256-GCM)</strong> 봉인.</li>
+<li><strong>민감정보 비저장</strong>: 환자 CI는 <strong>HMAC 해시(pepper)만 저장</strong>(평문 미보관). 연락처는 마스킹(끝 4자리). 접근로그에 바디·키 미기록.</li>
+<li><strong>전송</strong>: 공개=TLS(Cloudflare 엣지+Let's Encrypt). 서버↔서버 내부·mTLS 권장(운영가이드 §2).</li>
+</ul>
+
+<h3 id="sec-keys">6.3 키 수탁·경계</h3>
+<ul>
+<li><strong>개인키 앱 분리</strong>: 운영 권장 토폴로지 — sign-core는 개인키·마스터키·HSM SDK 미보유, <strong>crypto-proxy</strong>(사설망)가 키 수탁(<code>KEY_SIGNER_DRIVER=proxy</code>).</li>
+<li><strong>HSM 최소화</strong>: CA 트러스트 앵커 2키(Root·Issuing)만 HSM(KMS/PKCS#11), 말단(서명)·TSA 키는 SOFT → 서명·타임스탬프 건당 HSM 비용 0, 트러스트는 HSM-앵커 CA 사슬로 전파.</li>
+<li><strong>영속·회전</strong>: CA/TSA 키 재기동 영속(볼륨), Issuing 회전(이력 보존·verifyChain 현재+이력).</li>
+<li><strong>attestation</strong>: <code>caKeyCustody</code>·<code>caKeyCustodyProvider</code>·<code>assuranceLevel</code>(SOFTWARE/HSM_ANCHORED)을 발급·webhook에 동봉(법적 감사 정직성).</li>
+</ul>
+
+<h3 id="sec-hardening">6.4 하드닝 (go-live 보안 — 현재 라이브 활성)</h3>
+<table>
+<tr><th>코드</th><th>통제</th></tr>
+<tr><td><strong>H3</strong></td><td>PII GET(<code>/requests/:id</code>·<code>/audit</code>)에 x-api-key 강제. verify/ocsp/crl은 공개 유지.</td></tr>
+<tr><td><strong>H4</strong></td><td>rate-limit(공개 실IP/분). <code>trust proxy</code>로 nginx XFF 실IP 해석, 서버↔서버(XFF 부재)는 면제(연동 무중단).</td></tr>
+<tr><td><strong>M1</strong></td><td>webhook callbackUrl SSRF — https 강제·사설망/루프백/메타데이터(169.254) 차단. 동일서버 내부 수신부는 <code>WEBHOOK_INTERNAL_HOSTS</code> 명시 예외.</td></tr>
+<tr><td><strong>M2</strong></td><td>보안 헤더(helmet) — X-Frame·nosniff 상시, HSTS는 운영/https.</td></tr>
+<tr><td><strong>부팅 가드</strong></td><td>운영/하드닝 시 <code>CRYPTO_MASTER_KEY</code>·<code>HIS_INBOUND_API_KEY</code> 미설정·약한 폴백이면 부팅 거부(SecretBox 포함).</td></tr>
+<tr><td><strong>H2</strong>(잔여)</td><td>관리자 콘솔 IP allowlist(nginx) — go-live 시. CF 뒤 실IP 복원 또는 CF Zero Trust.</td></tr>
+</table>
+<p>가시화: <code>GET /v1/admin/ops-status</code> → <code>config.hardening</code>(enabled·piiAuth·rateLimitPerMin·webhookSsrfGuard).</p>
+
+<h3 id="sec-logs">6.5 로그·감사</h3>
+<table>
+<tr><th>로그</th><th>내용</th></tr>
+<tr><td>접근 로그</td><td>요청별 reqId·method·path·status·<strong>actor</strong>(<code>user:</code>/<code>staff:</code>/소비자명)·IP. 포털토큰 마스킹, 바디/키 미로깅. <code>ACCESS_LOG=false</code> 비활성.</td></tr>
+<tr><td>문서·발급 로그</td><td>인증서 발급·문서 서명 이벤트(콘솔 <code>/admin/activity-log</code>).</td></tr>
+<tr><td>인증 행위 로그</td><td>의료진 임상행위(처방·판독승인 등) 봉인(<code>POST /v1/audit-events</code>, 의료기록 별도 스트림).</td></tr>
+<tr><td>관리 행위 감사</td><td>로그인·계정변경(<code>admin:auth</code>·<code>admin:users</code>), 키 회전(<code>consumer:admin</code>), CA 회전(<code>CA_ROTATED</code>) — actor 귀속.</td></tr>
+<tr><td>권위 감사</td><td>해시체인 + TSA 앵커 — 위변조 탐지의 진실의 원천.</td></tr>
+</table>
+<p>운영: 구조적 JSON 1줄/요청 → 외부 집계(ELK/Loki)·보존정책 권장. 보존기간·백업은 인증기준 충족(F008 접속기록·F011 백업).</p>
+<p><strong>로그 뷰 디테일</strong>: <code>/admin/event-log</code>(인증 행위)·<code>/admin/audit-log</code>(감사·로그)에서 각 행을 클릭하면 <strong>전체 <code>data</code> 페이로드 + <code>entryHash</code>/<code>prevHash</code> + 정밀 시각</strong>이 펼쳐진다. 상단에 <strong>무결성 배지</strong>(체인 유효/깨짐·TSA 앵커 일치/미앵커)가 상시 표시되고, <code>entryHash</code> 축약 컬럼으로 한눈에 식별된다. <strong>관리자 감사</strong>(<code>admin:auth</code> 로그인·MFA·비밀번호 / <code>admin:users</code> 계정변경, 행위자 <code>user:&lt;아이디&gt;</code>·IP)는 감사·로그 화면에 <strong>admin 역할에만</strong> 노출(<code>GET /v1/admin/audit</code>, users:admin). 인증 행위 로그·관리자 감사는 <strong>서버측 검색</strong>(행위·행위자·대상·data 전체, <code>?q=</code>)과 <strong>전체 CSV 내보내기</strong>(검색 일치 전부, 페이지 무관 — <code>export.csv</code>, UTF-8 BOM, 심사·보존) 지원.</p>
+
+<h3 id="sec-tamper">6.6 위변조 방지 4중 방어</h3>
+<p><strong>인증서(누가) × 서명/해시(무엇) × 해시체인(순서) × TSA(언제)</strong>. 내부자가 전체를 재계산해도 TSA-봉인된 체인 head 불일치로 탐지된다. 검증: <code>GET /v1/requests/:id/audit/verify</code>(<code>valid·chainValid·anchored·anchorTsValid·anchorMatchesChain</code>). 설계: <code>docs/02-design/tamper-evidence-design.md</code>.</p>
+
+<h3 id="sec-secrets">6.7 시크릿 관리·회전</h3>
+<ul>
+<li><strong>저장</strong>: <code>.env.prod</code>(600 권한, 서버 생성). 연동 벤더 시크릿은 콘솔 입력 → AES-256-GCM 봉인 저장(평문 미표시, 마스킹). 채팅/repo 평문 금지.</li>
+<li><strong>소비자별 webhook 시크릿 격리</strong>: <code>erp→ERP_WEBHOOK_SECRET</code>/그 외→<code>HIS_WEBHOOK_SECRET</code> — 한 소비자가 타 소비자 webhook 위조 불가.</li>
+<li><strong>무중단 회전(P8)</strong>: API키 grace(구·신 동시)→commit. 영속(폐기키 부활 방지). webhook 시크릿은 수신팀 dual-accept 후 flip. <strong>실서비스 개시 직전 회전</strong>(§0.2).</li>
+<li><strong>break-glass</strong>: <code>CONSOLE_API_KEY</code>(계정 장애), <code>SIGN_ADMIN_API_KEY</code>(ca:admin·users:admin) — 최소·분리·감사.</li>
+<li>⚠️ <code>CRYPTO_MASTER_KEY</code> 회전 시 봉인 설정·관리자 세션 무효 → 재입력·재로그인(P8 비대상·별도).</li>
+</ul>
+
+<h3 id="sec-review">6.8 보안 검토 이력 (적용 완료)</h3>
+<p>security-architect·code-analyzer 다회 검토 → 적용:</p>
+<ul>
+<li><strong>Critical</strong>: C1 무인증 서명 차단 · audit-events 행위자(actor) 위조 차단(SSO sub 바인딩).</li>
+<li><strong>High</strong>: SSRF 강화(숫자IP·IPv4-mapped IPv6·후행점) · WITNESS 인증서 1일 · 키회전 영속(폐기키 부활 차단) · 이중서명 가드 · SecretBox 마스터키 부팅가드.</li>
+<li><strong>Medium</strong>: 테넌트 격리 · 보안헤더 · webhook dev-secret 금지 · 설정 endpoint SSRF.</li>
+<li><strong>Low</strong>: suspend/resume 409 · 매뉴얼 인증 게이트(공개 정적 URL 제거).</li>
+</ul>
+<p>결과: <strong>Critical 0 · 운영전환 잔여 0</strong>(코드측). 잔여 하드닝 = H2(admin IP, go-live).</p>
+
+<h3 id="sec-isms">6.9 ISMS-P · ISO/IEC 27001:2022 통제 매핑</h3>
+<div class="note">본 매핑은 sign이 구현한 <strong>기술적 통제</strong>를 ISMS-P 인증기준·ISO 27001:2022 Annex A와 대조한 <strong>참고표</strong>. 실제 인증 취득은 조직·정책·물리·인적·운영 심사를 포함하므로 별도 진행. ISMS-P 항목번호·문구는 인증기준 버전에 따라 가변 — 심사 시 공식 기준으로 확정.</div>
+<table>
+<tr><th>도메인 / sign 통제</th><th>ISMS-P (2.x 보호대책 / 3.x 개인정보)</th><th>ISO 27001:2022 Annex A</th></tr>
+<tr><td><strong>계정·인증</strong> — RBAC 계정·세션토큰·SSO·비밀번호 scrypt</td><td>2.5.1 계정관리 · 2.5.2 식별 · 2.5.3 인증 · 2.5.4 비밀번호 · 2.5.5 특수권한</td><td>A.5.16 Identity mgmt · A.5.17 Authentication info · A.8.5 Secure authentication</td></tr>
+<tr><td><strong>권한·접근통제</strong> — 역할 scope·api-key·테넌트 격리·C1·이중서명</td><td>2.5.5 권한관리 · 2.5.6 권한검토 · 2.6.2 정보시스템 접근 · 2.6.4 DB 접근</td><td>A.5.15 Access control · A.5.18 Access rights · A.8.2 Privileged access · A.8.3 Info access restriction</td></tr>
+<tr><td><strong>세션 관리</strong> — 서버측 비활동 자동 차단(idle)·동시 세션 수 제한·로그아웃/비번변경 즉시 폐기</td><td>2.6.3 응용프로그램 접근(세션 타임아웃·동시세션 제한) · (EMR F004 미사용 접속차단)</td><td>A.8.5 Secure authentication · A.5.15 Access control</td></tr>
+<tr><td><strong>네트워크 접근</strong> — localhost 바인드·nginx·하드닝 IP/rate-limit·SSRF</td><td>2.6.1 네트워크 접근 · 2.6.7 인터넷 접속 통제 · 2.10.6 원격접근</td><td>A.8.20 Networks security · A.8.21 Security of network services · A.8.22 Segregation</td></tr>
+<tr><td><strong>암호화·키관리</strong> — AES-256-GCM·RSA-3072/ECDSA·CI HMAC·HSM 최소화·crypto-proxy</td><td>2.7.1 암호정책 · 2.7.2 암호키 관리</td><td>A.8.24 Use of cryptography</td></tr>
+<tr><td><strong>전송 보안</strong> — TLS·mTLS(권장)·webhook HMAC</td><td>2.6.1 · 2.7.1 · 2.9.x</td><td>A.5.14 Information transfer · A.8.24</td></tr>
+<tr><td><strong>로그·접속기록</strong> — 접근로그(actor·reqId·IP)·관리행위 감사</td><td>2.9.4 로그·접속기록 관리 · 2.9.5 로그 점검</td><td>A.8.15 Logging · A.8.16 Monitoring</td></tr>
+<tr><td><strong>무결성·증거</strong> — 해시체인+TSA 4중 방어·감사인증서</td><td>2.9.4 · 2.11.x 사고대응 · (의무기록 수정이력)</td><td>A.5.28 Collection of evidence · A.8.15</td></tr>
+<tr><td><strong>개발보안·취약점</strong> — security-architect/code-analyzer 검토·e2e 게이트</td><td>2.8.1 보안요구사항 정의 · 2.8.2 검토·시험 · 2.11.2 취약점 점검</td><td>A.8.25 Secure dev lifecycle · A.8.28 Secure coding · A.8.8 Tech vulnerabilities</td></tr>
+<tr><td><strong>시크릿·운영</strong> — .env 600·봉인저장·무중단 회전(P8)·break-glass</td><td>2.7.2 암호키 관리 · 2.9.1 변경관리 · 2.5.5 특수권한</td><td>A.8.24 · A.5.17 · A.8.9 Configuration mgmt</td></tr>
+<tr><td><strong>백업·복구</strong> — PG·키볼트 백업·CA/TSA 영속</td><td>2.9.7 백업·복구 · 2.12 재해복구</td><td>A.8.13 Information backup · A.5.29/5.30 Continuity</td></tr>
+<tr><td><strong>외부자·연동</strong> — 소비자별 키·시크릿 격리·핸드오프 통제</td><td>2.3 외부자 보안(2.3.1~2.3.4)</td><td>A.5.19–A.5.22 Supplier relationships</td></tr>
+<tr><td><strong>개인정보(CI 등)</strong> — 최소수집·HMAC만 저장·마스킹·미저장</td><td>3.1 수집(최소수집) · 3.2 보유·이용(암호화) · 3.4 파기</td><td>(ISO/IEC 27701 PIMS) A.8.10 Info deletion · A.8.11 Data masking</td></tr>
+</table>
+<p><strong>EMR 보안성(12항목)</strong>과의 관계: EMR F001~F012는 ISMS-P 2.5/2.6/2.7/2.9와 상당 부분 중첩(계정·권한·암호화·접속기록·수정이력·전자서명). 대조표 <code>docs/06-ops/emr-security-mapping.md</code>. <strong>ISMS-P/ISO27001/ISO27017·27018 보유 시 EMR 보안성 일부 면제</strong> 가능(인증기준 참조).</p>
+
+<h3 id="sec-privacy">6.10 개인정보 보호 (ISO/IEC 27701 PIMS)</h3>
+<p>sign이 다루는 개인정보 = 주로 <strong>환자 CI(연계정보)</strong>·연락처. 핵심 원칙 = <strong>최소수집·HMAC만 저장(평문 미보관)·원내 고정(외부 미반출)·마스킹·파기</strong>.</p>
+<table>
+<tr><th>개인정보 통제(sign)</th><th>ISMS-P 3.x</th><th>ISO/IEC 27701</th></tr>
+<tr><td><strong>최소수집</strong> — 서명에 필요한 식별정보만(CI·이름·연락처), 목적 외 미수집</td><td>3.1.1 수집·이용 · 3.1.5 간접수집</td><td>7.2.1 Identify basis · 7.4.1 Limit collection · 7.2.2 Purpose</td></tr>
+<tr><td><strong>CI 비식별 저장</strong> — CI는 <strong>HMAC 해시(pepper)만 저장</strong>, 원문 미보관</td><td>3.2.1 개인정보 현황 · 3.2.2 품질보장 · 2.7 암호화</td><td>7.4.5 PII de-identification/deletion · 7.4.4 PII minimization</td></tr>
+<tr><td><strong>마스킹</strong> — 연락처 끝 4자리, 로그·발송이력 마스킹</td><td>3.2.x · 2.6.x</td><td>7.4.5 · (A.8.11 Data masking)</td></tr>
+<tr><td><strong>외부 미반출</strong> — 서명원본·CI 원내 고정. KMS엔 다이제스트만 송신(개인정보 아님)</td><td>3.3.1 제공·위탁 · 3.3.2 국외이전</td><td>7.5.1 Identify basis for transfer · 8.5.x</td></tr>
+<tr><td><strong>파기</strong> — 보유기간 경과·목적달성 시 파기(P7 clean-reset 포함)</td><td>3.4.1 파기 · 3.4.2 처리 정지</td><td>7.4.7 Retention · 7.4.8 Disposal · (A.8.10 Info deletion)</td></tr>
+<tr><td><strong>정보주체 권리</strong> — 동의 기반 서명·열람(포털)·동의 철회(withdraw)</td><td>3.5.1 권리보장 · 3.1.2 동의</td><td>7.3.x Obligations to PII principals</td></tr>
+</table>
+<div class="note">27701은 27001/27002의 개인정보 확장(PIMS). 본 표는 기술통제 대조용 — 개인정보 처리방침·위수탁 계약·정보주체 통지 등 <strong>관리적 통제는 조직 차원에서 별도 수립</strong>. 처리 주체(병원=개인정보처리자, sign=수탁/처리자 역할) 구분 명확화 필요.</div>
+
+<h3 id="sec-cloud">6.11 클라우드 보안 (ISO 27017/27018 · CSAP · 망분리)</h3>
+<p>sign 기본 = <strong>원내 구축형(on-premise)</strong> — 환자 민감정보·서명원본·키가 원내망 고정. <strong>클라우드는 HSM(AWS KMS) 한정 옵션</strong>(CA 앵커 키, 다이제스트만 송신). 아래는 클라우드 HSM 사용 시 적용.</p>
+<table>
+<tr><th>통제(sign)</th><th>기준</th><th>내용</th></tr>
+<tr><td><strong>책임 공유 모델</strong></td><td>ISO 27017 CLD.6.3.1</td><td>KMS/CloudHSM = 클라우드 사업자 책임(물리·HSM), 키 사용·정책 = sign 책임. IAM 최소권한.</td></tr>
+<tr><td><strong>키 고객 통제</strong></td><td>ISO 27018 · 27017</td><td>개인키 HSM 상주(비추출), sign은 <strong>다이제스트만 송신</strong>(개인정보·서명원본 미전송). 키 정책·회전 고객 통제.</td></tr>
+<tr><td><strong>가상환경 격리</strong></td><td>ISO 27017 CLD.9.5.1</td><td>멀티테넌트(ConsumerApp) 논리 격리, 감사 테넌트 격리(소비자별 조회), 컨테이너 망 분리.</td></tr>
+<tr><td><strong>클라우드 로깅</strong></td><td>ISO 27017 CLD.12.4</td><td>KMS 호출·키 사용 CloudTrail 등 로깅 권장(고객 측).</td></tr>
+<tr><td><strong>망분리</strong></td><td>CSAP · ISMS-P 2.6.1/2.10</td><td>원내망/DMZ 분리, sign-core localhost 바인드(외부는 nginx 경유), 개인키 <strong>crypto-proxy 사설망</strong> 분리. 클라우드 아웃바운드는 다이제스트만(망정책 재확인).</td></tr>
+<tr><td><strong>개인정보 국외이전</strong></td><td>ISO 27018 · 개인정보보호법</td><td>⚠️ AWS KMS(국외 리전) 사용 시 송신 데이터=다이제스트(개인정보 아님)이나, <strong>국외 리전·망 아웃바운드 정책은 운영 시 법무·보안 재확인</strong>. 원내 PKCS#11 HSM 선택 시 국외이전 회피.</td></tr>
+</table>
+<div class="note"><strong>CSAP</strong>(클라우드 보안인증)는 공공부문 클라우드 대상 — 민간 의료법인 원내 구축형엔 비대상. 공공 확장·클라우드 전면 전환 시 CSAP·망분리 요건 별도 검토. 현 설계는 <strong>원내 고정 + 클라우드 HSM 최소 표면</strong>으로 국외이전·반출 리스크 최소화.</div>
+
+<h3 id="sec-incident">6.12 사고대응 절차서 (Incident Response)</h3>
+<p>보안 사고 탐지 시 <strong>식별 → 격리 → 근절 → 복구 → 사후</strong> 5단계로 대응. ISMS-P 2.11(사고 예방·대응) / ISO A.5.24~A.5.28 대응. <strong>모든 대응은 무중단 메커니즘 우선</strong>(grace 회전·계정 비활성 등), 최악 시 P7 clean-reset.</p>
+
+<h4>① 사고 분류·등급</h4>
+<table>
+<tr><th>유형</th><th>예</th><th>등급</th></tr>
+<tr><td>시크릿 노출</td><td>API키·webhook 시크릿·마스터키 유출/채팅·repo 노출</td><td>High~Critical</td></tr>
+<tr><td>키/인증서 침해</td><td>CA·말단 개인키 유출, 부정 발급</td><td>Critical</td></tr>
+<tr><td>무단 접근</td><td>관리자 계정 탈취, 권한 오남용</td><td>High~Critical</td></tr>
+<tr><td>위조·위변조</td><td>webhook 위조, 서명/감사 변조 시도</td><td>High</td></tr>
+<tr><td>개인정보 유출</td><td>CI·연락처·환자정보 노출</td><td>Critical(법정 통지)</td></tr>
+<tr><td>서비스 장애</td><td>가용성·DB·CA 로드 실패</td><td>Medium~High</td></tr>
+</table>
+
+<h4>② 탐지 신호</h4>
+<ul>
+<li>접근로그 이상(actor·IP·실패율) · 하드닝 rate-limit 급증 · 무인증 401/403 패턴</li>
+<li>감사 무결성 실패 — <code>GET /v1/requests/:id/audit/verify</code> <code>valid=false</code> / 체인·앵커 불일치</li>
+<li>webhook 위조 의심 — 수신측 HMAC 검증 실패 · <code>/webhooks</code> 비정상</li>
+<li>readiness·ops-status 이상(<code>/health/ready</code>·CA 로드·DB)</li>
+</ul>
+
+<h4>③ 시나리오별 즉시 조치</h4>
+<table>
+<tr><th>사고</th><th>격리·근절(즉시)</th><th>복구</th></tr>
+<tr><td><strong>시크릿 노출</strong>(API키)</td><td>해당 소비자 키 <strong>회전</strong>(rotate→commit, 구키 폐기) — 부록 B.1</td><td>.env.prod 갱신·연동팀 신키 전달</td></tr>
+<tr><td><strong>webhook 시크릿 노출</strong></td><td>해당 소비자 <code>*_WEBHOOK_SECRET</code> 교체+recreate(수신팀 조율)</td><td>재전송 reconcile(<code>/webhooks</code>)</td></tr>
+<tr><td><strong>마스터키 노출</strong></td><td><code>CRYPTO_MASTER_KEY</code> 교체 → 봉인 설정·세션 무효(재입력·재로그인). 최악 P7</td><td>연동설정 재입력·관리자 재로그인</td></tr>
+<tr><td><strong>인증서/말단키 침해</strong></td><td>해당 인증서 <strong>폐기</strong>(<code>POST /:serial/revoke</code>) → OCSP/CRL 반영, 이후 서명 차단</td><td>재발급(enroll). 과거 서명은 LTV 유효</td></tr>
+<tr><td><strong>CA 키 침해</strong></td><td><strong>Issuing 회전</strong>(<code>/v1/ca/rotate-issuing</code>, 구 이력 검증 유지) / Root 침해 시 P7 전면 재생성</td><td>3팀 재기준(clean-reset-runbook)</td></tr>
+<tr><td><strong>관리자 계정 탈취</strong></td><td>계정 <strong>비활성화</strong>(<code>PATCH /v1/admin/users</code> status=disabled) → 기존 세션 즉시 무효 · 비번 재설정</td><td>로그 분석·권한 재검토</td></tr>
+<tr><td><strong>무단 접근(키)</strong></td><td>의심 소비자 키 폐기·H2 IP 제한·rate-limit 강화</td><td>접근로그 추적·범위 확인</td></tr>
+<tr><td><strong>위변조 의심</strong></td><td>audit/verify·TSA 앵커 대조로 진위 확정(변조면 탐지됨)</td><td>원본 감사인증서(PDF)로 증거 보전</td></tr>
+</table>
+
+<h4>④ 통지·에스컬레이션</h4>
+<ul>
+<li><strong>내부</strong>: 보안담당 → 운영책임자 → 경영진(등급별). 사고 기록(시각·범위·조치).</li>
+<li><strong>연동팀</strong>: 시크릿/키 영향 시 HIS·PACS·ERP 즉시 통지(키 재배포·dual-accept 조율).</li>
+<li><strong>개인정보 유출(법정)</strong>: 개인정보보호법 — 정보주체 통지 + 한국인터넷진흥원(KISA)/보호위 신고(법정 기한 내). 유출 항목·경위·대응·문의처 포함. ⚠️ 법무·DPO 즉시 연계.</li>
+<li><strong>EMR/의료</strong>: 의료기록 관련 사고는 의료법·관련 규정 보고체계 준수.</li>
+</ul>
+
+<h4>⑤ 사후(post-incident)</h4>
+<ul>
+<li>근본원인 분석(RCA) · 재발방지 대책(코드/설정/절차) · 보안 검토 반영 · 침투테스트 재실시.</li>
+<li>증거 보전 — 접근로그·감사체인·webhook 기록·감사인증서(불변).</li>
+<li>P8 시크릿 회전(영향 키 전수) · 필요 시 P7 clean-reset.</li>
+</ul>
+<div class="note">키 회전·인증서 폐기·CA 회전·clean-reset 등 <strong>실행 명령은 부록 B(운영 절차 런북) 및 <code>clean-reset-runbook.md</code></strong> 참조. 대응 권한 = <code>ca:admin</code>(키·CA)·<code>users:admin</code>(계정) — break-glass 키 안전 보관.</div>
+
+<h2 id="ops">7. 운영</h2>
+<h3 id="ops-hardening">7.1 보안 하드닝</h3>
+<p><code>SECURITY_HARDENING=true</code>(또는 production)에서 활성. <strong>현재 라이브 활성.</strong></p>
+<ul>
+<li><strong>H3</strong> PII GET(<code>/v1/requests/:id</code>·<code>/audit</code>)에 x-api-key 강제. 공개: verify/ocsp/crl/portal.</li>
+<li><strong>H4</strong> rate-limit(공개 실IP/분, 기본 120). 서버↔서버(HIS/PACS, XFF 부재)는 면제 — <code>trust proxy</code>로 nginx 실IP 해석.</li>
+<li><strong>M1</strong> Webhook callbackUrl SSRF(https 강제·사설망/메타데이터 차단).</li>
+<li><strong>M2</strong> 보안 헤더(helmet, HSTS).</li>
+<li><strong>H2</strong>(관리자 콘솔 IP 제한)은 실서비스 시 nginx로 적용 — Cloudflare 뒤이므로 실IP 복원(<code>CF-Connecting-IP</code>) 또는 CF Zero Trust 필요.</li>
+</ul>
+
+<h3 id="ops-keys">7.2 키수탁·HSM</h3>
+<p>HSM 상주 키 = <strong>CA 트러스트 앵커 2개(Root·Issuing)만</strong>. 말단(서명)키·TSA키는 SOFT(AES-256-GCM 봉인) → <strong>서명·타임스탬프 건당 HSM 비용 0</strong>. 트러스트는 HSM-앵커 CA 사슬로 전파된다.</p>
+<table>
+<tr><th>키</th><th>수탁</th></tr>
+<tr><td>Root CA / Issuing CA</td><td>HSM(클라우드 KMS/온프레 PKCS#11) — 2키</td></tr>
+<tr><td>말단(환자·의료진) / TSA</td><td>SOFT(FileVault 영속)</td></tr>
+</table>
+<div class="note">현재 라이브는 SOFT(FileVault, assuranceLevel=SOFTWARE). AWS KMS 주입 후 <strong>cutover 1회</strong>로 CA 앵커가 KMS 상주 → <code>HSM_ANCHORED</code> 전환. 어댑터(KMS·PKCS#11)는 구현·검증 완료, 조달만 남음.</div>
+
+<h3 id="ops-secrets">7.3 시크릿 회전</h3>
+<p>API 키(HIS·PACS·콘솔·CA admin)는 무중단 회전 가능: <code>POST /v1/admin/consumers/:name/rotate</code>(신규키 grace) → 소비자 전환 → <code>commit</code>(구키 폐기). 재기동 후에도 유지하려면 <code>.env.prod</code>도 갱신(2-step). Webhook 시크릿은 env 교체 + HIS의 dual-accept 윈도우와 조율. <strong>go-live 직전 P8 회전 권장.</strong></p>
+
+<h3 id="ops-monitor">7.4 모니터링·백업</h3>
+<ul>
+<li><strong>readiness</strong>: <code>GET /health/ready</code>(DB·CA) — k8s/헬스체크.</li>
+<li><strong>운영 상태</strong>: <code>GET /v1/admin/ops-status</code> — Webhook 적체(PENDING/FAILED/DEAD)·요청 분포·CA 시리얼·구성(하드닝·키수탁·연동). 콘솔 <strong>시스템 상태</strong>. <strong>운영 추세(차트)</strong>: <code>GET /v1/admin/metrics?days=N</code> — 요청 상태 분포·일자별 생성·Webhook 성공률을 시스템 상태 페이지에 시각화.</li>
+<li><strong>UI 편의</strong>: <strong>다크 모드</strong>(콘솔 우상단 토글, 환자 포털은 Light)·<strong>일괄 철회/폐기</strong>(대시보드 요청·인증서 목록 다건 선택→확인)·<strong>CSV 내보내기</strong>(대시보드·인증서·발송이력)·<strong>접근성</strong>(모달 포커스 트랩·본문 바로가기·환자 포털 글씨 크기/고대비)·<strong>실시간 자동 갱신</strong>(SSE — 상태 변경 시 대시보드·요청 상세가 수동 새로고침 없이 갱신, <code>GET /v1/events/stream</code>).</li>
+<li><strong>인앱 스케줄러</strong>: Webhook 재시도·만료 배치를 <strong>주기 자동 실행</strong>(<code>SCHEDULER_ENABLED</code> 기본 on, <code>SCHEDULER_WEBHOOK_RETRY_MIN</code> 기본 5분·<code>SCHEDULER_EXPIRE_MIN</code> 기본 60분, 기동 시 catch-up 1회). 외부 크론 사용 시 <code>SCHEDULER_ENABLED=false</code>. 멀티노드는 한 워커만 활성 권장. 상태는 ops-status <code>scheduler</code>.</li>
+<li><strong>Webhook 재시도(수동)</strong>: <code>POST /v1/maintenance/webhook-retry</code>(스케줄러가 자동 호출). 요청별 <code>/webhooks</code>로 HIS reconcile.</li>
+<li><strong>만료 배치</strong>: <code>POST /v1/maintenance/expire</code>(크론).</li>
+<li><strong>백업(자동화)</strong>: 라이브 호스트 cron 이 <strong>매일 03:40</strong> DB 를 덤프→<strong>gpg 암호화</strong>→로컬 14세대·<strong>오프사이트 30세대</strong> 보관(<code>scripts/backup-sign-db.sh</code>). 키 FileVault(볼륨)도 정기 백업 대상 — CA/TSA 키는 재기동 영속(볼륨 보존 필수). <strong>분기 1회 복구 리허설</strong> 절차와 재해 복구는 <code>docs/06-ops/backup-restore-runbook.md</code>. ⚠ 백업 암호문을 잃으면 백업 전체를 열 수 없다(비밀번호 관리자에 사본 필수).</li>
+<li><strong>운영 알림(자동 감시)</strong>: 5분 주기로 <strong>①백업 중단 ②감사 체인 붕괴 ③로그인 실패 폭주 ④Webhook DEAD ⑤ready 실패</strong>를 점검해 <code>OPS_ALERT_TO</code> 로 메일 통지한다(<code>SCHEDULER_WATCH_MIN</code> 기본 5분, 같은 알림은 <code>ALERT_THROTTLE_MIN</code> 기본 60분 1회로 억제·억제 횟수는 다음 메일에 합산). <strong>백업은 "실패"가 아니라 "성공 신호가 오지 않음"으로 판단</strong>하므로 크론이 아예 멈춰도 잡힌다(<code>BACKUP_MAX_AGE_H</code> 기본 26시간). 즉시 점검은 <code>POST /v1/maintenance/health-watch</code>. 수신자 미설정 시 로그에만 남는다.</li>
+</ul>
+
+<h3 id="ops-rbac">7.5 관리자 계정·RBAC (C-4)</h3>
+<p>콘솔 관리자는 <strong>로컬 계정</strong>(아이디·비밀번호 scrypt 해시, SignStore 영속)으로 인증하며 역할(관리자/운영자/열람자)로 권한이 결정된다. 계정 관리는 콘솔 <strong>사용자 관리</strong>(<code>/admin/users</code>, 관리자 전용) 또는 API(<code>/v1/admin/users</code>, <code>users:admin</code>).</p>
+<ul>
+<li><strong>최초 부트스트랩</strong>: 계정 0개일 때 <code>SIGN_ADMIN_PASSWORD</code>(+<code>SIGN_ADMIN_USER</code>, 기본 <code>admin</code>) 설정 시 최초 관리자 자동 생성. 미설정 시 <strong>sign-admin break-glass 키</strong>(<code>SIGN_ADMIN_API_KEY</code>, <code>users:admin</code> 보유)로 첫 계정 생성.</li>
+<li><strong>세션</strong>: 로그인 → HMAC 서명 세션 토큰(무상태·만료 내장, <code>SESSION_TTL_MIN</code> 기본 480분(8h)). 비밀키는 <code>SESSION_SECRET</code> 또는 <code>CRYPTO_MASTER_KEY</code> 파생. 마스터키 회전 시 기존 세션 무효(재로그인).</li>
+<li><strong>2차 인증(2FA/TOTP)</strong>: 인증앱(Google/Naver Authenticator 등) 기반 로그인 강화. <em>내 계정</em> 화면에서 등록(QR 스캔 또는 수동키 → 6자리 코드 확인 → 활성화·복구코드 8개 발급). 활성 계정은 로그인 시 1차(ID/PW) 후 인증앱 6자리 코드(또는 복구코드)를 추가 입력. 시크릿 AES-256-GCM 봉인·복구코드 1회용. 기계 키(HIS/PACS/ERP) 경로는 무관.</li>
+<li><strong>비활동 자동 로그아웃(EMR 보안성 F004 · 서버측 강제)</strong>: 콘솔에서 일정 시간 입력(마우스·키보드·스크롤·터치)이 없으면 자동 로그아웃. <code>SESSION_IDLE_TIMEOUT_MIN</code>(기본 15분, 절대 만료 <code>SESSION_TTL_MIN</code> 초과 시 TTL로 캡). <strong>운영 모드(하드닝/production)에서는 <code>0</code>(비활성)을 허용하지 않고 15분으로 강제</strong>(F004 보장) — 비운영에서만 <code>0</code>으로 끌 수 있다. <strong>서버측 세션 레지스트리</strong>가 매 요청 마지막 활동시각을 점검해 idle을 강제(클라이언트 JS 의존 아님) — 토큰을 보관·복제해도 서버가 차단. 만료 1분 전 경고 창에서 &lsquo;계속 사용&rsquo;으로 연장.</li>
+<li><strong>동시 세션 수 제한(ISMS-P 2.6.3)</strong>: 동일 사용자의 동시 세션을 <code>SESSION_MAX_CONCURRENT</code>(기본 3, <code>0</code>=무제한)로 제한 — 초과 로그인 시 가장 오래된 세션을 축출. <strong>즉시 폐기</strong>: 로그아웃·비밀번호 변경 시 서버 세션을 즉시 무효화(절대 만료 전이라도). 현재 값·활성 세션 수는 <code>/v1/admin/ops-status</code> <code>config.session</code>·콘솔 <em>시스템 상태</em>에서 확인(<code>enforcement=server</code>). 서버가 세션을 종료한 경우(축출·폐기·만료)에도 콘솔은 다음 동작 시 <strong>자동으로 로그인 화면으로 전환</strong>(전역 401 처리)된다.</li>
+<li><strong>안전장치</strong>: 마지막 활성 admin 강등·비활성 차단(409). 계정 비활성화 시 기존 토큰 즉시 무효. 모든 변경은 감사(<code>admin:users</code>)·로그인은 <code>admin:auth</code>에 봉인.</li>
+<li><strong>break-glass</strong>: <code>CONSOLE_API_KEY</code>는 계정 인증 장애 시 폴백(로그인 화면 &lsquo;고급: API 키&rsquo;). 단 <code>users:admin</code> 미보유 → 사용자 관리는 불가(최소권한).</li>
+</ul>
+
+<h3 id="ops-2fa">7.6 2단계 인증(2FA·TOTP) 운영</h3>
+<p>인증앱 기반 2단계 인증으로 관리자 로그인을 강화한다(ISMS-P 2.5.3 인증·개인정보 안전성 확보조치의 &lsquo;안전한 인증수단&rsquo; 강화). 1차 비밀번호 + 2차 인증앱 일회용 코드(TOTP, RFC6238). <strong>사용자별 자율 등록</strong>(현재). 기계 키 연동(HIS/PACS/ERP)은 2FA 무관.</p>
+<div class="note"><strong>등록 절차(런북)</strong> — 콘솔 <em>내 계정</em> → <strong>2단계 인증 설정</strong>:
+<ol>
+<li>인증앱(Microsoft / Google / Naver Authenticator, Authy, 2FAS 등)에서 <strong>QR 스캔</strong>(또는 화면의 <strong>수동 키</strong>를 직접 입력).</li>
+<li>인증앱에 표시되는 <strong>6자리 코드</strong>를 입력해 <strong>활성화</strong>.</li>
+<li>발급되는 <strong>복구코드 8개</strong>를 안전한 곳(비밀번호 관리자·금고)에 보관. <strong>각 1회용</strong>이며 기기 분실 시 로그인에 사용.</li>
+</ol></div>
+<ul>
+<li><strong>로그인 흐름</strong>: 2FA 활성 계정은 1차(아이디/비밀번호) 통과 후 <strong>세션이 바로 발급되지 않고</strong> 인증코드 입력 단계로 전환된다. 인증앱 6자리(또는 복구코드) 입력 → 검증 성공 시 세션 발급. 1차만으로는 어떤 작업도 불가(단기 챌린지 토큰 5분).</li>
+<li><strong>기기 분실·교체</strong>: ① 보관한 <strong>복구코드</strong>로 로그인 → 내 계정에서 <strong>2단계 인증 해제 후 재등록</strong>(새 기기). ② 복구코드도 없으면 다른 <code>관리자(admin)</code>가 해당 계정을 <strong>비활성화→재생성</strong>하거나, break-glass(<code>CONSOLE_API_KEY</code>/<code>SIGN_ADMIN_API_KEY</code>)로 복구. <em>(관리자가 타 계정 2FA를 직접 리셋하는 기능은 후속 예정)</em></li>
+<li><strong>해제</strong>: 내 계정에서 현재 인증코드(또는 복구코드) 확인 후 해제. 해제 시 복구코드도 폐기된다. 재등록하면 시크릿·복구코드 모두 새로 발급(기존 인증앱 항목은 수동 삭제).</li>
+<li><strong>인증앱 표기·로고</strong>: 발급자(issuer)는 <strong>&ldquo;WeRUB.B Sign&rdquo;</strong>으로 표시. 로고는 <code>image=</code> 파라미터(<code>/mfa-logo.png</code>)를 <strong>지원하는 앱(Authy·2FAS 등)에서만</strong> 보이며, <strong>MS·Google Authenticator는 로고 미표시</strong>(이름만). 등록 화면 QR 중앙에는 브랜드 로고가 항상 삽입된다. 로고 교체는 <code>web/public/mfa-logo.png</code>(또는 <code>MFA_LOGO_URL</code>).</li>
+<li><strong>보안</strong>: 시크릿은 <strong>AES-256-GCM 봉인</strong>(<code>CRYPTO_MASTER_KEY</code>) 저장, 복구코드는 sha256 해시(1회용 소모). 챌린지 토큰 5분 만료. 모든 행위 감사(<code>MFA_ENABLED/VERIFIED/FAILED/DISABLED</code>, <code>admin:auth</code>).</li>
+<li><strong>코드 불일치 시</strong>: 인증앱은 휴대폰 시계 기준 코드를 생성하므로 <strong>기기 시간 자동설정(NTP)</strong>을 확인(±30초 허용). 그래도 안 되면 복구코드로 로그인 후 재등록.</li>
+</ul>
+
+<h2 id="hisint">8. HIS·PACS 연동</h2>
+<p>HIS/PACS는 <strong>EXTERNAL 모드</strong>로 연동(현재 라이브). 발급·서명·검증은 sign이, 트리거·기록(미러)은 HIS/PACS가 담당.</p>
+<ul>
+<li><strong>인증</strong>: 기계 API 키(<code>x-api-key</code>, scope), 의료진은 HIS SSO(JWKS, <code>iss=hospitalrun</code>·<code>aud=sign</code>) 검증.</li>
+<li><strong>발급 위임</strong>: HIS는 인증서를 발급하지 않고 sign enroll 호출. 결과 serial 미러(읽기전용).</li>
+<li><strong>Webhook</strong>: 서명 완료/철회/만료/개정(<code>request.superseded</code>, <code>supersededBy</code> 포함) 시 HIS로 HMAC 서명 통지(eventId 멱등·재시도).</li>
+<li><strong>완료 확인</strong>: Webhook 또는 공개 <code>GET /v1/verify/:id</code> 폴링.</li>
+</ul>
+<p>상세 명세는 <code>docs/05-handoff/</code> 문서 세트 참조(HIS·PACS 통합 가이드·결정사항).</p>
+
+<h2 id="emr">9. EMR 인증 대응</h2>
+<p>EMR 인증제(보안성)는 EMR 본체(HIS) 심사이며 sign은 <strong>F010 전자서명·F008 접속기록·F009 위변조방지·F005 고유식별정보 암호화·F004 미사용 접속차단</strong>(콘솔 비활동 자동 로그아웃)을 분담·증빙한다. HSM·환자 본인인증은 보안성 필수요건이 아니다(각각 부인방지 보강·전자동의 법적효력 트랙).</p>
+<p>증빙: 대조표 <code>docs/06-ops/emr-security-mapping.md</code>, 증빙 가이드·시연 스크립트 <code>npm run emr:demo</code>, HIS 분담 체크리스트 <code>docs/05-handoff/emr-security-his-checklist.md</code>.</p>
+<div class="warn">항목 코드·개수(12/13)는 의료기관 종별·인증기준 버전에 따라 다르다. 심사 제출 전 공식 세부 PDF로 최종 확인하라.</div>
+
+<h2 id="checklist">10. 운영 체크리스트</h2>
+<h4>go-live(실서비스 전환)</h4>
+<ul>
+<li>[ ] 본인인증/발송 사업자 계약 → <code>verify()</code>/<code>send()</code> 실 REST 구현 + 연동 설정 입력</li>
+<li>[ ] AWS KMS 주입 → CA cutover(<code>HSM_ANCHORED</code>)</li>
+<li>[ ] 하드닝 활성 확인(현재 활성) + H2(관리자 IP 제한, nginx)</li>
+<li>[ ] P7 운영 DB clean-reset(테스트 데이터 정리, 양팀 합의)</li>
+<li>[ ] P8 시크릿 회전(API키·Webhook·sudo)</li>
+<li>[ ] 백업·크론(webhook-retry·expire) 구성</li>
+</ul>
+<h4>일상 운영</h4>
+<ul>
+<li>[ ] 시스템 상태에서 Webhook 적체·readiness 점검</li>
+<li>[ ] 만료/폐기 인증서 모니터링, 폐기 시 actor 확인</li>
+<li>[ ] 감사 무결성 주기 검증(<code>/audit/verify</code>)</li>
+</ul>
+
+<h2 id="trouble">11. 트러블슈팅</h2>
+<table>
+<tr><th>증상</th><th>원인·조치</th></tr>
+<tr><td>enroll 500</td><td>PATIENT/PROXY는 <code>identity.method</code> 필수(누락 시 400). STAFF는 미지정 시 STAFF_SSO 기본.</td></tr>
+<tr><td>서명 제출 401</td><td>하드닝 시 직접 제출은 키 필요. 환자=포털토큰, 의료진=SSO Bearer.</td></tr>
+<tr><td>Webhook 미수신</td><td>HIS 다운 시 FAILED → <strong>인앱 스케줄러가 자동 재시도</strong>(최대 8회·DEAD). 즉시 처리는 요청 상세 Webhook 탭. 스케줄러 비활성 시 외부 크론으로 <code>webhook-retry</code> 호출 필요.</td></tr>
+<tr><td>재기동 후 발급 실패</td><td>CA 키 FileVault 볼륨(<code>sign_keydata</code>) 보존 필수. <code>CRYPTO_KEY_VAULT</code> 설정 확인.</td></tr>
+<tr><td>연동 설정 변경 403</td><td><code>settings:write</code> 스코프 필요(콘솔 키). HIS/PACS 기계키는 불가.</td></tr>
+<tr><td>rate-limit 429</td><td>공개 트래픽 한도. <code>RATE_LIMIT_PER_MIN</code> 상향. 서버↔서버는 면제(XFF 부재).</td></tr>
+<tr><td>API 키 회전/CA 작업 403</td><td><code>ca:admin</code> 필요. <strong>관리자(admin) 계정</strong>으로 로그인하거나 break-glass 시 sign-admin 키 사용.</td></tr>
+<tr><td>사용자 관리·메뉴 403/숨김</td><td><code>users:admin</code> 필요(admin 역할). 운영자/열람자는 권한 밖 메뉴가 숨겨지고 서버가 강제.</td></tr>
+<tr><td>회전 후 재기동하니 구키로 복귀</td><td>회전은 in-memory. <code>.env.prod</code>의 키 값도 새 키로 갱신해야 영구(부록 B.1).</td></tr>
+<tr><td>연동 endpoint 저장 400</td><td>하드닝 시 endpoint는 https·공인망만(SSRF 차단). 사설망/메타데이터 IP 불가.</td></tr>
+<tr><td>부팅 실패(운영)</td><td>production/하드닝은 <code>CRYPTO_MASTER_KEY</code>(32B)·<code>HIS_INBOUND_API_KEY</code> 필수. 미설정 시 부팅 거부.</td></tr>
+<tr><td>SSO 서명 401</td><td>토큰 <code>iss=hospitalrun</code>·<code>aud=sign</code>·만료·<code>sub</code>↔participant 일치 확인. 뷰어 토큰(aud≠sign) 거부.</td></tr>
+<tr><td>본인확인 미충족 403</td><td>비대면인데 본인확인 정보 없음. 포털 본인인증 단계 완료 또는 identity 동반.</td></tr>
+<tr><td>매뉴얼/admin 접근 시 로그인 이동</td><td>정상(인증 게이트). 관리자 계정(또는 break-glass API 키)으로 로그인 필요.</td></tr>
+<tr><td>로그인 후 일정 시간 뒤 401</td><td>세션 토큰 만료(<code>SESSION_TTL_MIN</code> 기본 8h). 재로그인. 계정이 비활성화돼도 즉시 401.</td></tr>
+<tr><td>조작 없이 두면 자동 로그아웃(&lsquo;자동으로 로그아웃되었습니다&rsquo;)</td><td>정상 — 비활동 자동 로그아웃(EMR F004, 기본 15분). 만료 1분 전 경고 창에서 &lsquo;계속 사용&rsquo;으로 연장 가능. 시간 조정은 <code>SESSION_IDLE_TIMEOUT_MIN</code>(<code>0</code>=비활성).</td></tr>
+<tr><td>사용 중 갑자기 로그인 화면으로 전환(&lsquo;세션이 만료되어 로그아웃&rsquo;)</td><td>정상 — 서버가 세션을 종료한 경우(동시 세션 한도 초과로 <strong>다른 기기 로그인에 의해 축출</strong>·비밀번호 변경·관리자 비활성). 다시 로그인. 동시 사용이 필요하면 <code>SESSION_MAX_CONCURRENT</code> 상향.</td></tr>
+<tr><td>2FA 코드가 계속 안 맞음</td><td>인증앱 코드는 휴대폰 시계 기준 → <strong>기기 시간 자동설정(NTP)</strong> 확인(±30초 허용). 그래도 안 되면 <strong>복구코드</strong>로 로그인 후 내 계정에서 해제→재등록.</td></tr>
+<tr><td>2FA 기기 분실</td><td>보관한 <strong>복구코드</strong>(1회용)로 로그인 → 해제 후 새 기기 재등록. 복구코드도 없으면 다른 admin이 계정 비활성화→재생성 또는 break-glass 키로 복구.</td></tr>
+<tr><td>인증앱에 로고가 안 보임</td><td>MS·Google Authenticator는 커스텀 로고 미지원(이름 &lsquo;WeRUB.B Sign&rsquo;만 표시). 로고는 <code>image=</code> 지원 앱(Authy·2FAS 등)에서만. 등록 QR 중앙 로고는 항상 표시.</td></tr>
+<tr><td>검증 탭이 &lsquo;검증 실패&rsquo;로 보임(미서명)</td><td>서명 0건(아직 서명 전) 요청은 &lsquo;서명 대기 중&rsquo;으로 표시(정상). 1건 이상 서명된 후에만 성공/실패 판정.</td></tr>
+<tr><td>대시보드가 자동 갱신 안 됨</td><td>실시간(SSE) 미연결 시(프록시 버퍼링 등) <strong>수동 새로고침</strong>으로 폴백. 일괄작업 선택 중에는 자동 갱신 보류(혼동 방지).</td></tr>
+<tr><td>CSV 내보내기 401</td><td><code>requests:write</code> 스코프 필요(열람자 제외). 현재 필터(검색·상태·출처·기간)가 그대로 반영됨.</td></tr>
+</table>
+
+<h2 id="api">12. API 레퍼런스(요약)</h2>
+<p>OpenAPI: <code>docs/openapi.json</code>(운영 <code>/api-docs</code>는 기본 비노출). <strong>목록 페이지네이션</strong>: requests·certificates·admin/notifications·audit-events는 <code>?limit=&offset=</code> 지원(미지정 시 전체, limit max 200). 응답 <code>{ data:[…], page:{ total, limit, offset } }</code>(data 배열 하위호환). <strong>서버측 검색</strong>: <code>GET /v1/requests</code>·<code>GET /v1/certificates</code>는 <code>?q=</code>(부분일치 — 요청 제목·문서ID·요청ID·참가자명 / 인증서 시리얼·주체·유형·면허) 지원. <code>?status=</code>(정확일치)는 <code>GET /v1/requests</code> 한정(인증서 상태는 만료 계산 표시값이라 서버 필터 아님). <code>page.total</code>은 일치 결과 수. <strong>기간 필터</strong>: <code>GET /v1/requests</code>는 <code>?days=</code>(최근 N일) 또는 <code>?from=&to=</code>(ISO 범위, 대시보드 <strong>시작~종료일 직접 지정</strong>)로 생성일(<code>createdAt</code>) 기준 필터 — 대시보드 기본 <strong>최근 90일</strong>로 working set 한정. <strong>대시보드 추가 필터</strong>: <code>?createdBy=</code>(출처 — HIS/PACS/ERP/콘솔)·<code>?signMode=</code>(APP/PORTAL/MULTI)·<code>?incomplete=true</code>(미완료=CREATED·IN_PROGRESS)로 좁히기. 출처·서명모드는 인덱스 컬럼(<code>createdBy·signMode</code>)으로 DB 푸시다운. <strong>확장성</strong>: 서명요청·인증서 목록은 검색·필터·정렬·페이지·카운트를 <strong>DB 레벨로 푸시다운</strong> → 전체 메모리 로드 없이 페이지당 일정 비용. 서명요청=인덱스 컬럼 <code>status·reqCreatedAt·searchText</code>(상태·기간·최신순), 인증서=<code>ownerType·notBefore·searchText</code>(CA 제외·발급 최신순; 상태는 페이지에서 계산·유형 탭/초성은 콘솔 정제). <strong>CSV 내보내기(심사·보존)</strong>: 대시보드·인증서 목록·발송 이력에 <strong>내보내기</strong> 버튼 — <code>GET /v1/requests/export.csv</code>(현재 검색·상태·기간 필터 반영)·<code>/v1/certificates/export.csv</code>·<code>/v1/admin/notifications/export.csv</code>. <strong>감사 스트림</strong>도 <code>/v1/audit-events/export.csv</code>·<code>/v1/admin/audit/export.csv</code>(<code>?q=&amp;eventType=&amp;from=&amp;to=</code> 검색 일치 전부, 페이지 무관). UTF-8 BOM(한글 Excel)·<code>attachment</code>. 연락처는 마스킹값만·CI 미포함(평문 미노출). 주요 엔드포인트:</p>
+<table>
+<tr><th>메서드·경로</th><th>설명</th><th>인증</th></tr>
+<tr><td>POST /v1/certificates/enroll</td><td>인증서 발급</td><td>certificates:write</td></tr>
+<tr><td>GET /v1/certificates [/:serial/x509]</td><td>목록 / X.509</td><td>목록=하드닝 시 키 / x509 공개</td></tr>
+<tr><td>POST /v1/certificates/:serial/{revoke,suspend,resume}</td><td>폐기·중단·재개</td><td>certificates:write</td></tr>
+<tr><td>POST /v1/sign-requests</td><td>서명요청(HIS facade) — <code>supersedesRequestId</code> 지정 시 개정 재동의</td><td>requests:write</td></tr>
+<tr><td>POST /v1/requests/:id/supersede</td><td>문서 개정 재동의(원본 대체·새 버전) — <code>documentHash</code>·idempotencyKey, 참가자 미지정 시 원본 재사용</td><td>requests:write</td></tr>
+<tr><td>POST /v1/sign/:pid/submit · /v1/sign/staff · /v1/portal/:token/sign</td><td>서명(직접·SSO·포털)</td><td>키 / SSO / 토큰</td></tr>
+<tr><td>GET /v1/verify/:id</td><td>서명 검증</td><td>공개</td></tr>
+<tr><td>GET /v1/requests/:id/audit[/verify] · audit-certificate</td><td>감사·무결성·감사인증서 PDF</td><td>하드닝 시 키</td></tr>
+<tr><td>GET /v1/ocsp/:serial · /v1/crl</td><td>폐기검증</td><td>공개</td></tr>
+<tr><td>POST /v1/requests/:id/notify · GET .../notifications · /v1/admin/notifications</td><td>발송·이력</td><td>requests:write</td></tr>
+<tr><td>GET/PUT /v1/admin/settings[/:type]</td><td>연동 설정</td><td>settings:write</td></tr>
+<tr><td>GET /v1/admin/ops-status · /health/ready</td><td>운영 상태·readiness</td><td>키 / 공개</td></tr>
+<tr><td>GET /v1/admin/consumers · POST /v1/admin/consumers/:name/{rotate,commit} · /v1/ca/rotate-issuing</td><td>소비자 목록·키·CA 회전</td><td>ca:admin</td></tr>
+<tr><td>POST /v1/auth/login</td><td>관리자 로그인(1차) → 세션 토큰 <em>또는</em> 2FA 챌린지(<code>mfaRequired</code>)</td><td>공개</td></tr>
+<tr><td>POST /v1/auth/2fa/verify</td><td>2차 인증(챌린지 토큰 + TOTP/복구코드) → 세션 토큰</td><td>공개(챌린지)</td></tr>
+<tr><td>GET /v1/auth/2fa/status · POST /v1/auth/2fa/{setup,enable,disable}</td><td>2FA 상태/등록·활성화(복구코드)·해제</td><td>세션</td></tr>
+<tr><td>GET /v1/auth/me · POST /v1/auth/{password,logout}</td><td>현재 주체 / 비밀번호 변경·로그아웃</td><td>세션</td></tr>
+<tr><td>GET/POST /v1/auth/idle-timeout</td><td>자동 로그아웃(비활동) 시간 조회/설정 — 정책 상한 이내(개발모드 최대 2h·실모드 비표시), 즉시 강제</td><td>세션</td></tr>
+<tr><td>GET /v1/events/stream</td><td>실시간 이벤트(SSE) — 서명요청 상태 변경 push(콘솔 자동 갱신)</td><td>세션/키</td></tr>
+<tr><td>GET /v1/admin/metrics?days=N</td><td>운영 추세 — 상태 분포·일자별 요청·Webhook 성공률</td><td>requests:write</td></tr>
+<tr><td>GET/POST /v1/admin/users · PATCH /:username · POST /:username/reset-password</td><td>관리자 계정 목록·생성·역할·상태·비밀번호 재설정</td><td>users:admin</td></tr>
+<tr><td>GET /v1/audit-events[/streams,/verify,/export.csv]</td><td>인증 행위 로그(임상행위) 조회·스트림·무결성·CSV — <code>?q=&amp;eventType=&amp;from=&amp;to=</code> 서버측 필터</td><td>requests:write</td></tr>
+<tr><td>GET /v1/admin/audit[/streams,/verify,/export.csv]</td><td>관리자 감사(<code>admin:auth</code>·<code>admin:users</code>, 행위자·IP) 조회·무결성·CSV — 동일 필터</td><td>users:admin</td></tr>
+<p class="note">관리자 콘솔 호출은 로그인으로 발급된 <strong>세션 토큰</strong>을 <code>x-session-token</code>(또는 <code>Authorization: Bearer</code>) 헤더로 전송한다(역할이 스코프 결정). 기계 연동(HIS/PACS)·break-glass는 종전대로 <code>x-api-key</code>.</p>
+
+<h2 id="samples">부록 A. 등록·요청 샘플</h2>
+<p>등록(발급)·서명요청·연동 설정 시 실제로 보내는 요청 본문(JSON) 예시. 콘솔 입력값과 1:1 대응하며, HIS/PACS 서버↔서버 연동 시 그대로 사용한다. 공통 헤더: <code>Content-Type: application/json</code>, <code>x-api-key: &lt;키&gt;</code>(서명 토큰 경로는 Bearer).</p>
+
+<h3>A.1 인증서 발급 (enroll) — <code>POST /v1/certificates/enroll</code></h3>
+<h4>환자(PATIENT) — 비대면 PASS</h4>
+<pre><code>{
+  "ownerType": "PATIENT",
+  "subjectDn": "CN=홍길동, O=○○병원",
+  "ownerRef": "patient-1002934",          // (선택) HIS 환자 식별자
+  "identity": { "method": "PASS", "ci": "&lt;PASS 본인확인 CI&gt;", "phone": "01012345678" }
+}</code></pre>
+<h4>의료진(STAFF) — SSO + 면허</h4>
+<pre><code>{
+  "ownerType": "STAFF",
+  "subjectDn": "CN=김의사, O=○○병원, OU=정형외과",
+  "ownerRef": "staff-7781",                // 직원번호
+  "licenseNumber": "의-12345",
+  "identity": { "method": "STAFF_SSO" }    // 생략 시 STAFF 기본 STAFF_SSO
+}</code></pre>
+<h4>외부 입회인(WITNESS) — 대면, 단기(1일)</h4>
+<pre><code>{
+  "ownerType": "WITNESS",
+  "subjectDn": "CN=입회인 박○○",
+  "identity": { "method": "INPERSON" },
+  "validDays": 1
+}</code></pre>
+<h4>대리/보호자(PROXY) — 대리인 본인확인</h4>
+<pre><code>{
+  "ownerType": "PROXY",
+  "subjectDn": "CN=법정대리인 홍부모",
+  "identity": { "method": "PASS", "ci": "&lt;대리인 CI&gt;" }
+}
+// 관계·대상 환자는 서명요청 참가자(relationship·onBehalfOf)에서 지정</code></pre>
+<h4>응답(예)</h4>
+<pre><code>{ "data": {
+  "certId": "9f1c…", "serialNumber": "CERT-0007-AB12CD",
+  "ownerType": "PATIENT", "subjectDn": "CN=홍길동, O=○○병원",
+  "notBefore": "2026-06-16T…", "notAfter": "2027-06-16T…",
+  "chainValid": true, "x509Serial": "…",
+  "keyCustody": "SOFT", "assuranceLevel": "SOFTWARE"
+} }</code></pre>
+<div class="warn"><strong>필수</strong>: <code>ownerType</code>·<code>subjectDn</code>. PATIENT/PROXY는 <code>identity.method</code>(PASS/MOBILE_NAME/INPERSON) 필수. <strong>publicKey는 보내지 않는다</strong>(키는 sign이 생성·수탁). 발급은 멱등 아님 → <code>serialNumber</code> 보관·재사용.</div>
+
+<h3>A.2 서명요청 생성</h3>
+<h4>HIS facade — <code>POST /v1/sign-requests</code> (발급+요청 한 번에)</h4>
+<pre><code>{
+  "documentType": "CONSENT",
+  "documentHash": "&lt;최종 PDF SHA-256, 64 hex&gt;",
+  "channel": "PORTAL",                      // DIRECT | PORTAL | STAFF | PROXY
+  "issueNo": "CF-2026-0001",                // 멱등 키(문서 발급번호)
+  "requiredIdentityLevel": "PASS",
+  "externalSignerRef": "patient-1002934",
+  "patientSigner": { "name": "홍길동", "ci": "&lt;CI&gt;", "phone": "01012345678" },
+  "callbackUrl": "https://his.example/api/sign-webhook"   // 미지정 시 전역 HIS_WEBHOOK_URL
+}
+// 응답: { signatureRequestId, participantId, portalUrl? }</code></pre>
+<h4>상세 생성 — <code>POST /v1/requests</code> (다자 순차)</h4>
+<pre><code>{
+  "idempotencyKey": "req-cf-0001",
+  "externalDocId": "CF-2026-0001",
+  "title": "수술 동의서",
+  "documentHash": "&lt;SHA-256 64 hex&gt;",
+  "signMode": "APP",
+  "ttlDays": 30,
+  "participants": [
+    { "signerRole": "PATIENT", "signerType": "PATIENT", "displayName": "홍길동",
+      "signOrder": 1, "certSerial": "CERT-0007-AB12CD", "requiredIdentityLevel": "PASS" },
+    { "signerRole": "DOCTOR",  "signerType": "STAFF",   "displayName": "김의사",
+      "signOrder": 2, "certSerial": "CERT-0003-99XY00", "requiredIdentityLevel": "STAFF_SSO",
+      "externalSignerRef": "staff-7781" }
+  ]
+}</code></pre>
+<h4>대리(PROXY) 참가자</h4>
+<pre><code>{ "signerRole": "GUARDIAN", "signerType": "PROXY", "displayName": "홍부모",
+  "signOrder": 1, "certSerial": "CERT-00XX-…", "requiredIdentityLevel": "PASS",
+  "relationship": "법정대리인", "onBehalfOf": "홍길동(환자)" }</code></pre>
+
+<h3>A.3 서명 제출</h3>
+<pre><code>// 직접(HIS 앱, 키)  POST /v1/sign/&lt;participantId&gt;/submit
+{ "identity": { "method": "PASS", "ci": "&lt;CI&gt;" } }
+
+// 포털(환자)        POST /v1/portal/&lt;token&gt;/sign
+{ "identity": { "method": "PASS", "ci": "&lt;CI&gt;" } }
+
+// 의료진 SSO        POST /v1/sign/staff   (헤더 Authorization: Bearer &lt;staff-token&gt;)
+{ "participantId": "…" }</code></pre>
+
+<h3>A.4 연동 설정 — <code>PUT /v1/admin/settings/&lt;type&gt;</code> (settings:write)</h3>
+<pre><code>// 본인인증(idv)
+{ "provider": "pass", "enabled": true,
+  "fields":  { "endpoint": "https://idv-vendor.example/v1" },
+  "secrets": { "apiKey": "&lt;발급 API키&gt;" } }       // 빈값=기존유지, "__CLEAR__"=삭제
+
+// 발송(notifier)
+{ "provider": "kakao",
+  "fields":  { "endpoint": "https://api.kakao.example", "templateId": "TPL-001" },
+  "secrets": { "apiKey": "&lt;키&gt;", "senderKey": "&lt;발신프로필&gt;" } }
+
+// 키수탁(hsm) — 캡처(적용=cutover)
+{ "provider": "aws-kms",
+  "fields": { "region": "ap-northeast-2", "keyId": "alias/sign-ca" } }</code></pre>
+<p>시크릿은 <strong>암호화 저장·평문 미반환</strong>. 응답은 마스킹(<code>secretsSet</code>으로 설정 여부만).</p>
+
+<h3>A.5 발송 요청 — <code>POST /v1/requests/&lt;id&gt;/notify</code></h3>
+<pre><code>{ "baseUrl": "https://sign.example.org",
+  "recipients": [ { "participantId": "…", "to": "01012345678", "channel": "ALIMTALK" } ] }
+// 수신 연락처는 저장 시 끝 4자리만 마스킹(평문 미저장)</code></pre>
+
+<h3>A.6 Webhook 수신 페이로드(참고) — HIS가 받는 형태</h3>
+<pre><code>{ "eventId": "651e…", "type": "request.completed",
+  "signatureRequestId": "…", "externalDocId": "CF-2026-0001",
+  "signCertSerial": "CERT-0007-AB12CD", "signCertSerials": ["…"],
+  "assuranceLevel": "SOFTWARE", "auditCertUri": "https://…/audit-certificate",
+  "occurredAt": "2026-06-16T…" }
+// 헤더 X-Sign-Signature: HMAC-SHA256(body, webhookSecret). eventId 멱등.</code></pre>
+
+<h2 id="runbook">부록 B. 운영 절차 (단계별 런북)</h2>
+<p>실제 운영자가 따라 하는 단계별 절차. 각 절차는 콘솔 메뉴 또는 API로 수행한다.</p>
+
+<h3 id="rb-rotate">B.1 API 키 무중단 회전 (P8)</h3>
+<p>HIS·PACS·콘솔·CA admin 키를 다운타임 없이 교체. 콘솔 <strong>API 키 회전</strong>(CA Admin 키 필요).</p>
+<ol class="steps">
+<li><strong>rotate</strong>: 대상 소비자(예: hospitalrun) '키 회전' → '자동생성' 선택 → 새 키가 1회 표시되면 <strong>복사</strong>(다시 못 봄). 이 시점부터 구키·신키 <strong>둘 다 유효</strong>(grace, activeKeys=2).</li>
+<li><strong>소비자 갱신</strong>: 새 키를 해당 시스템(HIS/PACS)의 sign 연동 설정에 반영·재기동. 호출이 새 키로 전환됐는지 확인.</li>
+<li><strong>commit</strong>: '회전 계속(commit)' → 유지할 키(새 키) 입력 → 구키 폐기(activeKeys=1). 이후 구키는 401.</li>
+<li><strong>영구화</strong>: 재기동 후에도 유지되도록 서버 <code>.env.prod</code>의 해당 키 값도 새 키로 갱신(회전은 in-memory).</li>
+</ol>
+<div class="warn">실패 시: commit 전이면 구키가 계속 유효하므로 롤백 부담 없음. 새 키 분실 시 구키 유지 상태에서 다시 rotate.</div>
+
+<h3 id="rb-onboard">B.2 신규 의료진 인증서 발급 (온보딩)</h3>
+<ol class="steps">
+<li>HIS가 온보딩 시 <code>POST /v1/certificates/enroll</code>(ownerType=STAFF, subjectDn, licenseNumber, identity.method=STAFF_SSO) 1회 호출(부록 A.1).</li>
+<li>반환된 <code>serialNumber</code>를 직원 계정(user.signCertSerial)에 저장.</li>
+<li>이후 의료진 서명은 SSO 토큰의 <code>sign_cert_serial</code> 클레임으로 해당 인증서 재사용 — 추가 발급 없음.</li>
+<li>예외/수동 발급은 콘솔 <strong>인증서 발급</strong>에서 가능.</li>
+</ol>
+
+<h3 id="rb-webhook">B.3 Webhook 장애 대응 (HIS 수신 실패)</h3>
+<ol class="steps">
+<li>증상 확인: 콘솔 <strong>시스템 상태</strong> → Webhook 적체(FAILED/DEAD) 또는 요청 상세 Webhook 탭.</li>
+<li><strong>인앱 스케줄러가 자동 재시도</strong>(기본 5분, 최대 8회 후 DEAD). HIS 복구 후 다음 주기에 자동 전송.</li>
+<li>즉시 재시도: 요청 상세 Webhook 탭의 '재시도' 또는 <code>POST /v1/maintenance/webhook-retry</code>.</li>
+<li>DEAD(8회 초과) 건은 HIS가 <code>GET /v1/requests/:id/webhooks</code> 또는 공개 <code>GET /v1/verify/:id</code>로 reconcile.</li>
+</ol>
+
+<h3 id="rb-revoke">B.4 인증서 폐기·중단</h3>
+<ol class="steps">
+<li>콘솔 <strong>인증서 목록·관리</strong>에서 대상 검색.</li>
+<li><strong>중단(suspend)</strong>: 일시 정지(가역) — 향후 서명만 차단, 재개 가능. <strong>폐기(revoke)</strong>: 영구.</li>
+<li>과거 서명은 서명 시점에 유효했으면 그대로 유효(LTV) — 폐기가 소급 무효화하지 않음.</li>
+<li>폐기 상태는 <code>GET /v1/ocsp/:serial</code>·<code>/v1/crl</code>로 검증. 모든 폐기/중단은 행위자(actor) 감사 봉인.</li>
+</ol>
+
+<h3 id="rb-vendor">B.5 벤더 연동 활성화 (PASS·알림톡 계약 후)</h3>
+<ol class="steps">
+<li>사업자 계약·API 규격 확보 후 sign 측 <code>verify()</code>/<code>send()</code> 실 REST 구현·배포(스텁→실구현).</li>
+<li>콘솔 <strong>연동 설정</strong>에서 provider(pass/kakao 등)·endpoint·apiKey 입력 → 저장(암호화). 즉시 런타임 반영.</li>
+<li>테스트 1건으로 본인확인/발송 동작 확인. 문제 시 provider=mock으로 즉시 롤백.</li>
+<li>HSM/KMS는 캡처 설정 후 <strong>cutover(재배포)</strong> 필요 — <code>assuranceLevel</code> SOFTWARE→HSM_ANCHORED 전환.</li>
+</ol>
+
+<h2 id="glossary">부록 C. 용어집</h2>
+<table>
+<tr><th>용어</th><th>설명</th></tr>
+<tr><td>CA (인증기관)</td><td>인증서를 발급·서명하는 신뢰 주체. sign은 2단(Root→Issuing) 자체 CA 운영.</td></tr>
+<tr><td>PKI</td><td>공개키 기반구조 — 인증서·키·CA로 신원과 서명을 보증하는 체계.</td></tr>
+<tr><td>말단 인증서 / 앵커 키</td><td>말단=환자·의료진 서명용 인증서(SOFT). 앵커=CA Root·Issuing 키(HSM 최소화 대상 2키).</td></tr>
+<tr><td>CMS / PAdES-B-LTA</td><td>표준 전자서명 포맷(PKCS#7 CAdES / PDF 장기검증 LTV). 만료 후에도 검증 가능.</td></tr>
+<tr><td>TSA / 타임스탬프</td><td>RFC3161 신뢰 시각 — 서명·감사에 '언제'를 봉인. 부인방지·LTV 근거.</td></tr>
+<tr><td>LTV (장기검증)</td><td>인증서 만료·폐기 후에도 서명 시점 유효성으로 검증 유지.</td></tr>
+<tr><td>감사 해시체인</td><td>append-only 이벤트 체인(prev/entry hash) + TSA 앵커 → 위변조 탐지.</td></tr>
+<tr><td>assuranceLevel</td><td>키 보증 수준. SOFTWARE(SOFT) / HSM_ANCHORED(CA앵커 HSM) / HSM_RESIDENT.</td></tr>
+<tr><td>keyCustody</td><td>키 수탁 방식. SOFT(AES-256-GCM 봉인) / HSM(KMS·PKCS#11 상주).</td></tr>
+<tr><td>requiredIdentityLevel</td><td>참가자 본인확인 요구 수준. NONE/INPERSON/MOBILE_NAME/PASS/APP_STEPUP/STAFF_SSO.</td></tr>
+<tr><td>signMode / channel</td><td>서명 채널. DIRECT(HIS앱)·PORTAL(원외)·STAFF(SSO)·PROXY(대리).</td></tr>
+<tr><td>CI</td><td>본인확인 연계정보(개인 식별값). sign은 평문 미저장 — pepper HMAC 해시만.</td></tr>
+<tr><td>scope (스코프)</td><td>API 키 권한. requests:write·certificates:write·settings:write·ca:admin.</td></tr>
+<tr><td>grace (회전)</td><td>키 회전 시 구·신 키가 모두 유효한 무중단 윈도우.</td></tr>
+<tr><td>EXTERNAL 모드</td><td>HIS가 자체 서명(SIMULATION) 대신 sign에 위임하는 운영 모드(현재 라이브).</td></tr>
+<tr><td>OCSP / CRL</td><td>인증서 폐기 상태 실시간 조회(OCSP) / 폐기 목록(CRL).</td></tr>
+</table>
+
+<h2 id="faq">부록 D. 자주 묻는 질문 (FAQ)</h2>
+<h4>Q. 의료진은 서명할 때마다 인증서를 발급받나?</h4>
+<p>아니다. 온보딩 시 1회 발급 후 SSO 토큰의 serial로 재사용한다(부록 B.2).</p>
+<h4>Q. 인증서를 폐기하면 과거 서명도 무효가 되나?</h4>
+<p>아니다. 서명 시점(TSA)에 유효했으면 그 서명은 LTV로 유효 유지된다. 폐기는 향후 서명만 차단.</p>
+<h4>Q. 환자 본인인증(PASS)이 아직 mock인데 EMR 인증에 문제 없나?</h4>
+<p>EMR 보안성은 의료진(시스템 사용자) 인증 기준이라 환자 본인인증은 필수요건이 아니다. 환자 본인인증은 전자동의 <em>법적효력</em> 트랙(부록 C·§9).</p>
+<h4>Q. 연동 설정에 입력한 API 키는 안전한가?</h4>
+<p>AES-256-GCM으로 봉인 저장되며 화면·API로 평문 반환되지 않는다(설정 여부만 표시). 변경은 settings:write 권한만 가능.</p>
+<h4>Q. HIS가 다운되면 완료 알림(Webhook)은 어떻게 되나?</h4>
+<p>FAILED로 표시되고 인앱 스케줄러가 자동 재시도(최대 8회). HIS 복구 후 자동 전송되며, 폴링(verify)으로도 reconcile 가능(부록 B.3).</p>
+<h4>Q. 목록이 너무 많으면?</h4>
+<p>목록은 서버 페이지네이션(<code>?limit=&offset=</code>) 지원. 콘솔은 페이지 컨트롤로 탐색.</p>
+<h4>Q. 키를 클라우드 HSM으로 올리면 비용이 많이 드나?</h4>
+<p>HSM 상주 키는 CA 앵커 2개뿐(말단·TSA는 SOFT)이라 서명 건당 HSM 비용 0, 키 보관료만 고정(§7.2).</p>
+<h4>Q. 관리자 콘솔은 누구나 접근하나?</h4>
+<p>로그인(콘솔 API 키) 필요. 운영 매뉴얼도 인증 뒤에서만 접근. 고권한 작업(CA·키 회전)은 별도 Admin 키(ca:admin).</p>
+
+</main>
+<footer>
+  sign 전자서명 플랫폼 운영 매뉴얼 · <strong>v1.6.0</strong> · 제작 <strong>(주)위루비</strong> (Weruby Inc.) · 항목 문구·정책은 운영 환경·인증기준 버전에 따라 변동될 수 있으며 코드/배포가 최종 기준입니다. · 본 문서는 관리자 콘솔 「운영 매뉴얼」 메뉴로도 접근 가능합니다.
+</footer>
+</div>
+<script>
+  const links = [...document.querySelectorAll('nav.toc a')];
+  const map = new Map(links.map(a => [a.getAttribute('href').slice(1), a]));
+  // TOC 클릭 스크롤 — iframe srcDoc 은 base URL 이 없어 네이티브 #앵커 스크롤이 불안정.
+  // scrollIntoView 로 보정(섹션이 없으면 네이티브 동작 유지).
+  links.forEach(a => {
+    const id = (a.getAttribute('href') || '').slice(1);
+    a.addEventListener('click', (ev) => {
+      const el = id && document.getElementById(id);
+      if (el) { ev.preventDefault(); el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+    });
+  });
+  // TOC 활성 강조(현재 보이는 섹션)
+  const obs = new IntersectionObserver((es) => {
+    es.forEach(e => { if (e.isIntersecting) { links.forEach(l => l.style.background=''); const a = map.get(e.target.id); if (a) a.style.background = '#1e293b'; } });
+  }, { rootMargin: '0px 0px -75% 0px' });
+  document.querySelectorAll('h2[id],h3[id]').forEach(h => obs.observe(h));
+</script>
+</body>
+</html>

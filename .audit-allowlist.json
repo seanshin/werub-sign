@@ -1,0 +1,141 @@
+{
+  "$comment": "공급망 게이트(scripts/audit-gate.mjs) 예외 목록 — prod 의존성 high/critical GHSA 중 '지금 업그레이드 불가·노출 제한적'으로 판단한 것만. 항목마다 reason(왜 안전한가)·followup(언제 없어지는가) 필수. 신규 어드바이저리는 여기 없으면 CI 가 실패한다. 관리: 신현묵 <8508132+seanshin@users.noreply.github.com>",
+  "allow": [
+    {
+      "id": "GHSA-xwcq-pm8m-c4vf",
+      "package": "crypto-js",
+      "severity": "critical",
+      "reason": "pdfkit→crypto-js 체인. crypto-js 는 pdfkit 의 PDF 비밀번호 암호화 기능에서만 쓰이는데 sign 은 그 기능을 쓰지 않는다(문서 암호화는 자체 SecretBox AES-256-GCM). 상위 수정판 없음(fixAvailable=false).",
+      "followup": "pdfkit/@signpdf 대체 또는 수정판 출시 시 제거. 보안 트랙 S6 후속(의존성 메이저 업그레이드)에서 재평가.",
+      "added": "2026-08-04"
+    },
+    {
+      "id": "GHSA-52cp-r559-cp3m",
+      "package": "js-yaml",
+      "severity": "high",
+      "reason": "@nestjs/swagger 체인. js-yaml 은 스펙 문서 생성 경로에서만 사용되고 외부 입력 YAML 을 파싱하지 않는다(요청 본문은 JSON only).",
+      "followup": "NestJS 11 스택 업그레이드(@nestjs/swagger 11.4.6+) 시 해소.",
+      "added": "2026-08-04"
+    },
+    {
+      "id": "GHSA-r5fr-rjxr-66jc",
+      "package": "lodash",
+      "severity": "high",
+      "reason": "@nestjs/swagger 체인. _.template 미사용 — 스웨거 메타데이터 조립 내부 유틸로만 쓰이며 사용자 입력이 템플릿에 닿지 않는다.",
+      "followup": "NestJS 11 스택 업그레이드 시 해소.",
+      "added": "2026-08-04"
+    },
+    {
+      "id": "GHSA-xf7r-hgr6-v32p",
+      "package": "multer",
+      "severity": "high",
+      "reason": "DoS 계열. 업로드 엔드포인트는 전부 인증 뒤(consumer 키/관리자 세션)이고 rate-limit·크기 상한이 있다. 익명 표면 아님.",
+      "followup": "@nestjs/platform-express 11(multer 2.x) 업그레이드 시 해소 — S6 후속.",
+      "added": "2026-08-04"
+    },
+    {
+      "id": "GHSA-v52c-386h-88mc",
+      "package": "multer",
+      "severity": "high",
+      "reason": "동일 — multer DoS 계열, 인증·rate-limit 뒤 표면.",
+      "followup": "@nestjs/platform-express 11 업그레이드 시 해소.",
+      "added": "2026-08-04"
+    },
+    {
+      "id": "GHSA-5528-5vmv-3xc2",
+      "package": "multer",
+      "severity": "high",
+      "reason": "동일 — multer DoS 계열, 인증·rate-limit 뒤 표면.",
+      "followup": "@nestjs/platform-express 11 업그레이드 시 해소.",
+      "added": "2026-08-04"
+    },
+    {
+      "id": "GHSA-72gw-mp4g-v24j",
+      "package": "multer",
+      "severity": "high",
+      "reason": "동일 — multer DoS 계열, 인증·rate-limit 뒤 표면.",
+      "followup": "@nestjs/platform-express 11 업그레이드 시 해소.",
+      "added": "2026-08-04"
+    },
+    {
+      "id": "GHSA-h25m-26qc-wcjf",
+      "package": "next",
+      "severity": "high",
+      "reason": "Next 보안픽스 누적분 — 수정판이 next 16(메이저)라 즉시 불가. 콘솔·포털은 nginx 뒤 same-origin 구성이고 콘솔은 인증 뒤 표면. RSC/Server Actions/미들웨어·i18n·custom server·WebSocket upgrade 등 해당 기능 미사용(App Router 정적 + 클라이언트 fetch 구조).",
+      "followup": "Next 16 업그레이드(S6 후속, UI E2E 47종으로 회귀 가드) 시 일괄 해소.",
+      "added": "2026-08-04"
+    },
+    {
+      "id": "GHSA-q4gf-8mx6-v5v3",
+      "package": "next",
+      "severity": "high",
+      "reason": "동일 — Next 16 대기, 해당 기능(RSC 스트리밍) 미사용.",
+      "followup": "Next 16 업그레이드 시 해소.",
+      "added": "2026-08-04"
+    },
+    {
+      "id": "GHSA-8h8q-6873-q5fj",
+      "package": "next",
+      "severity": "high",
+      "reason": "동일 — Next 16 대기, 해당 기능 미사용.",
+      "followup": "Next 16 업그레이드 시 해소.",
+      "added": "2026-08-04"
+    },
+    {
+      "id": "GHSA-c4j6-fc7j-m34r",
+      "package": "next",
+      "severity": "high",
+      "reason": "동일 — WebSocket upgrade 미사용.",
+      "followup": "Next 16 업그레이드 시 해소.",
+      "added": "2026-08-04"
+    },
+    {
+      "id": "GHSA-36qx-fr4f-26g5",
+      "package": "next",
+      "severity": "high",
+      "reason": "동일 — Pages Router·i18n 미사용(App Router).",
+      "followup": "Next 16 업그레이드 시 해소.",
+      "added": "2026-08-04"
+    },
+    {
+      "id": "GHSA-m99w-x7hq-7vfj",
+      "package": "next",
+      "severity": "high",
+      "reason": "동일 — Server Actions 미사용.",
+      "followup": "Next 16 업그레이드 시 해소.",
+      "added": "2026-08-04"
+    },
+    {
+      "id": "GHSA-89xv-2m56-2m9x",
+      "package": "next",
+      "severity": "high",
+      "reason": "동일 — Server Actions·custom server 미사용.",
+      "followup": "Next 16 업그레이드 시 해소.",
+      "added": "2026-08-04"
+    },
+    {
+      "id": "GHSA-p9j2-gv94-2wf4",
+      "package": "next",
+      "severity": "high",
+      "reason": "동일 — rewrites destination 에 사용자 입력 없음(고정 프록시는 nginx 담당).",
+      "followup": "Next 16 업그레이드 시 해소.",
+      "added": "2026-08-04"
+    },
+    {
+      "id": "GHSA-6g55-p6wh-862q",
+      "package": "postcss",
+      "severity": "high",
+      "reason": "next 체인의 빌드타임 도구 — 프로덕션에서 공격자 제어 CSS/sourceMappingURL 을 파싱할 경로 없음(자사 CSS 만 빌드).",
+      "followup": "Next 16 업그레이드 시 해소.",
+      "added": "2026-08-04"
+    },
+    {
+      "id": "GHSA-r28c-9q8g-f849",
+      "package": "postcss",
+      "severity": "high",
+      "reason": "동일 — 빌드타임 한정, 외부 CSS 미파싱.",
+      "followup": "Next 16 업그레이드 시 해소.",
+      "added": "2026-08-04"
+    }
+  ]
+}

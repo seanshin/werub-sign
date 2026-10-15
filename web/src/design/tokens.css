@@ -1,0 +1,233 @@
+/* ============================================================
+   의료 전자서명 트러스트 서비스 — 디자인 토큰
+   CSS Variables (Design Tokens)
+   ============================================================ */
+
+:root {
+  /* ── Color: Primary ── */
+  --color-primary:        #1f6feb;
+  --color-primary-hover:  #1558c0;
+  --color-primary-light:  #dbeafe;
+  --color-primary-text:   #ffffff;
+  --color-primary-strong: #1558c0; /* primary-light 위 소형 텍스트 대비(WCAG AA 4.5:1) 보장용 */
+
+  /* ── Color: Semantic ── */
+  --color-success:        #22c55e;
+  --color-success-bg:     #dcfce7;
+  --color-success-text:   #166534;
+
+  --color-warning:        #f59e0b;
+  --color-warning-bg:     #fef3c7;
+  --color-warning-text:   #92400e;
+
+  --color-danger:         #dc2626; /* 흰 글씨 대비 4.81:1(AA) — #ef4444(3.76)에서 상향 */
+  --color-danger-hover:   #b91c1c;
+  --color-danger-bg:      #fee2e2;
+  --color-danger-text:    #991b1b;
+
+  --color-info:           #3b82f6;
+  --color-info-bg:        #eff6ff;
+  --color-info-text:      #1e40af;
+
+  /* ── Color: Neutrals ── */
+  --color-gray-50:        #f9fafb;
+  --color-gray-100:       #f3f4f6;
+  --color-gray-200:       #e5e7eb;
+  --color-gray-300:       #d1d5db;
+  --color-gray-400:       #9ca3af;
+  --color-gray-500:       #6b7280;
+  --color-gray-600:       #4b5563;
+  --color-gray-700:       #374151;
+  --color-gray-800:       #1f2937;
+  --color-gray-900:       #111827;
+
+  /* ── Color: Surface ── */
+  --color-bg:             #ffffff;
+  --color-bg-secondary:   #f9fafb;
+  --color-bg-tertiary:    #f3f4f6;
+  --color-border:         #e5e7eb;
+  --color-border-strong:  #d1d5db;
+
+  /* ── Color: Text ── */
+  --color-text-primary:   #111827;
+  --color-text-secondary: #6b7280;
+  --color-text-tertiary:  #9ca3af;
+  --color-text-disabled:  #d1d5db;
+  --color-text-inverse:   #ffffff;
+
+  /* ── Status Badge Colors ── */
+  --status-created-bg:      #eff6ff;
+  --status-created-text:    #1d4ed8;
+  --status-created-border:  #bfdbfe;
+
+  --status-in-progress-bg:   #fef3c7;
+  --status-in-progress-text: #92400e;
+  --status-in-progress-border: #fde68a;
+
+  --status-completed-bg:    #dcfce7;
+  --status-completed-text:  #166534;
+  --status-completed-border: #bbf7d0;
+
+  --status-expired-bg:      #f3f4f6;
+  --status-expired-text:    #4b5563;
+  --status-expired-border:  #d1d5db;
+
+  --status-withdrawn-bg:    #fef3c7;
+  --status-withdrawn-text:  #713f12;
+  --status-withdrawn-border: #fde68a;
+
+  --status-revoked-bg:      #fee2e2;
+  --status-revoked-text:    #991b1b;
+  --status-revoked-border:  #fecaca;
+
+  --status-pending-bg:      #f3f4f6;
+  --status-pending-text:    #374151;
+  --status-pending-border:  #d1d5db;
+
+  --status-signed-bg:       #dcfce7;
+  --status-signed-text:     #166534;
+  --status-signed-border:   #bbf7d0;
+
+  /* ── Spacing ── */
+  --space-1:   0.25rem;   /* 4px */
+  --space-2:   0.5rem;    /* 8px */
+  --space-3:   0.75rem;   /* 12px */
+  --space-4:   1rem;      /* 16px */
+  --space-5:   1.25rem;   /* 20px */
+  --space-6:   1.5rem;    /* 24px */
+  --space-8:   2rem;      /* 32px */
+  --space-10:  2.5rem;    /* 40px */
+  --space-12:  3rem;      /* 48px */
+  --space-16:  4rem;      /* 64px */
+  --space-20:  5rem;      /* 80px */
+
+  /* ── Border Radius ── */
+  --radius-sm:   0.25rem;   /* 4px */
+  --radius-md:   0.375rem;  /* 6px */
+  --radius-lg:   0.5rem;    /* 8px */
+  --radius-xl:   0.75rem;   /* 12px */
+  --radius-2xl:  1rem;      /* 16px */
+  --radius-full: 9999px;
+
+  /* ── Typography ── */
+  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Apple SD Gothic Neo',
+                 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+  --font-mono:   ui-monospace, 'SF Mono', 'Fira Code', Menlo, monospace;
+
+  --text-xs:    0.75rem;    /* 12px */
+  --text-sm:    0.875rem;   /* 14px */
+  --text-base:  1rem;       /* 16px */
+  --text-lg:    1.125rem;   /* 18px */
+  --text-xl:    1.25rem;    /* 20px */
+  --text-2xl:   1.5rem;     /* 24px */
+  --text-3xl:   1.875rem;   /* 30px */
+  --text-4xl:   2.25rem;    /* 36px */
+
+  --font-normal:   400;
+  --font-medium:   500;
+  --font-semibold: 600;
+  --font-bold:     700;
+
+  --leading-tight:  1.25;
+  --leading-snug:   1.375;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+
+  /* ── Shadows ── */
+  --shadow-xs:  0 1px 2px 0 rgba(0,0,0,.05);
+  --shadow-sm:  0 1px 3px 0 rgba(0,0,0,.1), 0 1px 2px -1px rgba(0,0,0,.1);
+  --shadow-md:  0 4px 6px -1px rgba(0,0,0,.1), 0 2px 4px -2px rgba(0,0,0,.1);
+  --shadow-lg:  0 10px 15px -3px rgba(0,0,0,.1), 0 4px 6px -4px rgba(0,0,0,.1);
+  --shadow-xl:  0 20px 25px -5px rgba(0,0,0,.1), 0 8px 10px -6px rgba(0,0,0,.1);
+
+  /* ── Z-index ── */
+  --z-dropdown: 1000;
+  --z-modal:    1050;
+  --z-toast:    1100;
+
+  /* ── Transition ── */
+  --transition-fast:   150ms ease;
+  --transition-normal: 200ms ease;
+  --transition-slow:   300ms ease;
+}
+
+/* ============================================================
+   다크 테마 — [data-theme="dark"] 토큰 오버라이드 (관리자 콘솔).
+   gray 램프를 반전(낮음=어두운bg/높음=밝은text)해 기존 컴포넌트 의미 유지.
+   환자 포털은 data-theme 미설정 → Light 유지(고대비 모드는 접근성에서 별도).
+   ============================================================ */
+:root[data-theme='dark'] {
+  /* Neutrals — 반전 램프 */
+  --color-gray-50:  #0d1117;
+  --color-gray-100: #161b22;
+  --color-gray-200: #21262d;
+  --color-gray-300: #30363d;
+  --color-gray-400: #484f58;
+  --color-gray-500: #6e7681;
+  --color-gray-600: #8b949e;
+  --color-gray-700: #b1bac4;
+  --color-gray-800: #c9d1d9;
+  --color-gray-900: #e6edf3;
+
+  /* Surface */
+  --color-bg:            #0d1117;
+  --color-bg-secondary:  #161b22;
+  --color-bg-tertiary:   #21262d;
+  --color-border:        #30363d;
+  --color-border-strong: #484f58;
+
+  /* Text */
+  --color-text-primary:   #e6edf3;
+  --color-text-secondary: #8b949e;
+  --color-text-tertiary:  #6e7681;
+  --color-text-disabled:  #484f58;
+  --color-text-inverse:   #0d1117;
+
+  /* Primary tint */
+  --color-primary-light: #16263f;
+  --color-primary-strong: #cfe2ff; /* 다크 navy(primary-light/오버레이 포함) 위 대비 4.5:1 보장(밝은 블루) */
+
+  /* Semantic — 어두운 배경 위 톤 */
+  --color-success-bg: #122b1e; --color-success-text: #56d364;
+  --color-warning-bg: #34290f; --color-warning-text: #e3b341;
+  --color-danger-bg:  #3a1518; --color-danger-text:  #f47067; --color-danger-hover: #f85149;
+  --color-info-bg:    #12233e; --color-info-text:    #6cb6ff;
+
+  /* Status badges */
+  --status-created-bg: #12233e; --status-created-text: #6cb6ff; --status-created-border: #1f3a5f;
+  --status-in-progress-bg: #34290f; --status-in-progress-text: #e3b341; --status-in-progress-border: #4a3a14;
+  --status-completed-bg: #122b1e; --status-completed-text: #56d364; --status-completed-border: #1d4a30;
+  --status-expired-bg: #21262d; --status-expired-text: #8b949e; --status-expired-border: #30363d;
+  --status-withdrawn-bg: #34290f; --status-withdrawn-text: #e3b341; --status-withdrawn-border: #4a3a14;
+  --status-revoked-bg: #3a1518; --status-revoked-text: #f47067; --status-revoked-border: #5a2226;
+  --status-pending-bg: #21262d; --status-pending-text: #b1bac4; --status-pending-border: #30363d;
+  --status-signed-bg: #122b1e; --status-signed-text: #56d364; --status-signed-border: #1d4a30;
+
+  /* Shadows — 어두운 배경에서 더 강하게 */
+  --shadow-xs: 0 1px 2px 0 rgba(0,0,0,.4);
+  --shadow-sm: 0 1px 3px 0 rgba(0,0,0,.5), 0 1px 2px -1px rgba(0,0,0,.5);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,.5), 0 2px 4px -2px rgba(0,0,0,.5);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,.6), 0 4px 6px -4px rgba(0,0,0,.6);
+  --shadow-xl: 0 20px 25px -5px rgba(0,0,0,.6), 0 8px 10px -6px rgba(0,0,0,.6);
+
+  color-scheme: dark;
+}
+
+/* ============================================================
+   환자 포털 고대비 모드 — [data-portal-contrast="high"] (고령자 접근성).
+   순흑 텍스트·강한 테두리·순백 배경으로 대비 극대화.
+   ============================================================ */
+:root[data-portal-contrast='high'] {
+  --color-text-primary:   #000000;
+  --color-text-secondary: #1a1a1a;
+  --color-text-tertiary:  #333333;
+  --color-bg:             #ffffff;
+  --color-bg-secondary:   #ffffff;
+  --color-border:         #000000;
+  --color-border-strong:  #000000;
+  --color-primary:        #0a3d91;
+  --color-primary-hover:  #072c6b;
+  --color-primary-text:   #ffffff;
+  --color-info-bg:        #e6efff;
+  --color-info-text:      #00308f;
+}

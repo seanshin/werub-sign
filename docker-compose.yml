@@ -1,0 +1,23 @@
+# sign 운영 영속화 — PostgreSQL (Prisma)
+# 사용: docker compose up -d  →  npm run prisma:migrate  →  STORE_DRIVER=prisma npm start
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: sign-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: sign
+      POSTGRES_PASSWORD: CHANGE_ME
+      POSTGRES_DB: sign
+    ports:
+      - '5432:5432'
+    volumes:
+      - sign_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U sign -d sign']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  sign_pgdata:

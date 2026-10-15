@@ -1,0 +1,24 @@
+.pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.CREATED       { background: var(--status-created-bg);      color: var(--status-created-text);      border-color: var(--status-created-border); }
+.IN_PROGRESS   { background: var(--status-in-progress-bg);  color: var(--status-in-progress-text);  border-color: var(--status-in-progress-border); }
+.COMPLETED     { background: var(--status-completed-bg);    color: var(--status-completed-text);    border-color: var(--status-completed-border); }
+.EXPIRED       { background: var(--status-expired-bg);      color: var(--status-expired-text);      border-color: var(--status-expired-border); }
+.WITHDRAWN     { background: var(--status-withdrawn-bg);    color: var(--status-withdrawn-text);    border-color: var(--status-withdrawn-border); }
+.SUPERSEDED    { background: var(--status-expired-bg);      color: var(--status-expired-text);      border-color: var(--status-expired-border); }
+.REVOKED       { background: var(--status-revoked-bg);      color: var(--status-revoked-text);      border-color: var(--status-revoked-border); }
+.PENDING       { background: var(--status-pending-bg);      color: var(--status-pending-text);      border-color: var(--status-pending-border); }
+.SIGNED        { background: var(--status-signed-bg);       color: var(--status-signed-text);       border-color: var(--status-signed-border); }
+/* 발송 이력 결과 */
+.SENT          { background: var(--status-completed-bg);    color: var(--status-completed-text);    border-color: var(--status-completed-border); }
+.FAIL          { background: var(--status-withdrawn-bg);    color: var(--status-withdrawn-text);    border-color: var(--status-withdrawn-border); }
+.SKIP          { background: var(--status-expired-bg);      color: var(--status-expired-text);      border-color: var(--status-expired-border); }

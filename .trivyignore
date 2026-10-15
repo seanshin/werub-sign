@@ -1,0 +1,4 @@
+# trivy 이미지 스캔(OS 패키지) 예외 목록 — security.yml 의 trivy 잡이 사용.
+# Node 의존성 예외는 여기가 아니라 .audit-allowlist.json (npm audit 게이트 담당).
+# 형식: CVE ID 한 줄씩 + 위에 사유·후속 주석. 사유 없는 예외 금지.
+# 관리: 신현묵 <8508132+seanshin@users.noreply.github.com>

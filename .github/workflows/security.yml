@@ -1,0 +1,139 @@
+# 개발자: 신현묵 <8508132+seanshin@users.noreply.github.com>
+# 공급망 보안 게이트(보안 트랙 S6) — docs/01-plan/security-enhancement-plan.md
+#
+# 역할 분담(이중 게이트 방지):
+#   - audit-gate  : Node prod 의존성 high/critical (예외 = .audit-allowlist.json, 사유 필수)
+#   - lockfile    : 락파일 변조 검증 — https·registry.npmjs.org 만 허용 (설치 강제는 ci.yml 의 npm ci 가 담당)
+#   - semgrep     : SAST 주간+push — CodeQL 은 프라이빗 저장소에서 GHAS(Enterprise) 없이 불가하여 Semgrep CE 로 대체
+#   - trivy       : 컨테이너 베이스 이미지 OS 패키지만(--pkg-types os) — Node 의존성은 audit-gate 담당 (예외 = .trivyignore)
+#   - cosign 서명 : 미도입 — 이미지가 레지스트리 배포 없이 라이브 호스트에서 직접 빌드되므로 서명 검증 지점이 없음. 레지스트리 도입 시 재검토.
+name: Security
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: '0 20 * * 0' # 매주 월요일 05:00 KST — 코드 변경 없어도 새 어드바이저리를 잡는다
+  workflow_dispatch:
+
+concurrency:
+  group: security-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: true
+
+# 최소 권한 — 읽기 전용
+permissions:
+  contents: read
+
+# 스캐너 이미지는 digest 로 고정(공급망 게이트가 스스로 float 태그를 쓰면 모순).
+# 갱신: 러너에서 `docker pull <repo>` 후 `docker images --digests` 로 새 digest 확인·교체.
+env:
+  SEMGREP_IMAGE: semgrep/semgrep@sha256:bdf7013b2c3634a487671158da77c554f531742326b543a9464d2adf6c433ac8 # latest @ 2026-08-04
+  TRIVY_IMAGE: aquasec/trivy@sha256:7cced7cae583819fc7806d4cbc0dbbc7cad18b99f7d3e235192e6da8c091045c # latest @ 2026-08-04
+
+jobs:
+  audit-gate:
+    name: npm audit 게이트 (prod 의존성)
+    runs-on: [self-hosted, werub-prod]
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      # npm audit 은 락파일만으로 동작 — npm ci 불필요(레지스트리 조회만)
+      - name: 공급망 게이트 (root + web)
+        run: npm run audit:gate
+
+  lockfile:
+    name: 락파일 변조 검증
+    runs-on: [self-hosted, werub-prod]
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: lockfile-lint (root)
+        run: npx --yes lockfile-lint@4 --path package-lock.json --allowed-hosts npm --validate-https
+      - name: lockfile-lint (web)
+        run: npx --yes lockfile-lint@4 --path web/package-lock.json --allowed-hosts npm --validate-https
+
+  semgrep:
+    name: SAST (Semgrep)
+    runs-on: [self-hosted, werub-prod]
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      # 컨테이너로 실행(러너에 파이썬 의존 없음). --error: finding 있으면 실패.
+      # 대상은 소스만 — 생성물(dist·manualHtml)·테스트는 제외해 신호 대 잡음 유지.
+      - name: Semgrep scan
+        run: >
+          docker run --rm -v "$PWD:/src" -w /src
+          -e SEMGREP_SEND_METRICS=off
+          "$SEMGREP_IMAGE"
+          semgrep scan --config p/default --error --metrics=off
+          --exclude node_modules --exclude dist --exclude web/.next
+          --exclude 'web/src/app/admin/manual/manualHtml.ts'
+          src web/src scripts
+
+  trivy:
+    name: 이미지 스캔 (베이스 OS)
+    # PR 마다 이미지 2개를 빌드하는 건 과함 — main 반영·주간·수동만.
+    # 스캔 대상이 OS 패키지뿐이므로 push 는 Dockerfile 변경 시에만 의미가 있다(아래 changed 스텝).
+    # 새 CVE 공표는 주간 스케줄이 잡는다.
+    if: github.event_name != 'pull_request'
+    runs-on: [self-hosted, werub-prod]
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          fetch-depth: 2 # push 시 HEAD^ 대조용
+      - name: Dockerfile 변경 감지 (push 한정 — schedule/dispatch 는 항상 스캔)
+        id: changed
+        run: |
+          if [ "${{ github.event_name }}" = "push" ] && git rev-parse HEAD^ >/dev/null 2>&1 \
+             && ! git diff --name-only HEAD^ HEAD | grep -qE '^(Dockerfile|web/Dockerfile|\.trivyignore)$'; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "OS 레이어 무변경 push — 스캔 생략(주간 스케줄이 커버)"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Build sign-core image
+        if: steps.changed.outputs.skip != 'true'
+        run: docker build -t sign-core:ci .
+      - name: Build sign-web image
+        if: steps.changed.outputs.skip != 'true'
+        run: docker build -t sign-web:ci web
+      - name: Trivy scan (sign-core)
+        if: steps.changed.outputs.skip != 'true'
+        run: >
+          docker run --rm
+          -v /var/run/docker.sock:/var/run/docker.sock
+          -v "$PWD/.trivyignore:/tmp/.trivyignore"
+          -v trivy-cache:/root/.cache/
+          "$TRIVY_IMAGE" image
+          --pkg-types os --severity HIGH,CRITICAL --ignore-unfixed
+          --ignorefile /tmp/.trivyignore --exit-code 1
+          sign-core:ci
+      - name: Trivy scan (sign-web)
+        if: steps.changed.outputs.skip != 'true'
+        run: >
+          docker run --rm
+          -v /var/run/docker.sock:/var/run/docker.sock
+          -v "$PWD/.trivyignore:/tmp/.trivyignore"
+          -v trivy-cache:/root/.cache/
+          "$TRIVY_IMAGE" image
+          --pkg-types os --severity HIGH,CRITICAL --ignore-unfixed
+          --ignorefile /tmp/.trivyignore --exit-code 1
+          sign-web:ci
+      - name: CI 이미지 정리
+        if: always()
+        run: docker rmi -f sign-core:ci sign-web:ci 2>/dev/null || true

@@ -1,0 +1,111 @@
+name: CI
+
+# e2e:all 게이트 — 백엔드 e2e(+joint·headers·restart) + contract:prisma + UI E2E(Playwright, a11y 포함).
+# 필요 외부 인프라 없음: increment22(SoftHSM2)는 미설치 시 자동 SKIP, contract:prisma는 FakePrisma 사용.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# 진행 중 동일 ref 의 이전 실행 취소(중복 절약)
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# 최소 권한 — 이 워크플로는 읽기만 한다(아티팩트 업로드는 별도 권한 불요)
+permissions:
+  contents: read
+
+jobs:
+  # PostgreSQL 영속·마이그레이션 커버리지 — 각 PG 테스트는 클린 스키마에서 실행
+  # (SOFT 서명자 CA 키는 프로세스 메모리 보관 → 죽은 CA 잔존 DB 재사용 시 서명 불가).
+  pg:
+    name: PostgreSQL e2e
+    runs-on: [self-hosted, werub-prod]
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: sign
+          POSTGRES_PASSWORD: CHANGE_ME
+          POSTGRES_DB: sign
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U sign -d sign"
+          --health-interval 5s --health-timeout 5s --health-retries 12
+    env:
+      DB_URL: postgresql://sign:CHANGE_ME@localhost:5433/sign
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      # Node 22 = 런타임 이미지(node:22-alpine)와 동일 메이저 — 20 은 2026-04 EOL
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: npm ci
+      - run: npx prisma generate
+      - run: npm run build
+      - name: Migrate deploy (fresh DB)
+        run: npx prisma migrate deploy
+      - name: PG 영속·JSONB 라운드트립 (prisma-live)
+        run: node test/prisma-live.e2e.mjs
+      - name: 스키마 클린 리셋
+        run: npx prisma migrate reset --force --skip-seed
+      - name: 마이그레이션·푸시다운 (K2)
+        run: node test/migrate.e2e.mjs
+
+  e2e-all:
+    name: e2e:all gate
+    runs-on: [self-hosted, werub-prod]
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Setup Node 22 (런타임 이미지와 동일 메이저)
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            web/package-lock.json
+
+      - name: Install deps (root)
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Install deps (web)
+        run: npm ci
+        working-directory: web
+
+      - name: Install Playwright chromium (+OS deps)
+        if: runner.environment == 'github-hosted'
+        run: npx playwright install --with-deps chromium
+        working-directory: web
+      - name: Install Playwright chromium (self-hosted, OS deps 사전설치)
+        if: runner.environment == 'self-hosted'
+        run: npx playwright install chromium
+        working-directory: web
+
+      - name: Run e2e:all gate
+        run: npm run e2e:all
+
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: |
+            web/playwright-report/
+            web/test-results/
+          retention-days: 7
+          if-no-files-found: ignore

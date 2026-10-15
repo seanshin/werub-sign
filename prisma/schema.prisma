@@ -1,0 +1,301 @@
+// sign — 전자서명 트러스트 서비스 (독립 DB)
+// 설계: docs/02-design/features/의료-전자동의서-플랫폼.design.md (v0.5)
+// 스키마: docs/01-plan/schema.md
+generator client {
+  provider      = "prisma-client-js"
+  // Alpine/musl(OpenSSL 3) 컨테이너 엔진 + 로컬 native
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DB_URL")
+}
+
+// ── PKI: 키 보관 추상화 (SOFT 암호화 → HSM 교체) ──
+model KeyMaterial {
+  id           String   @id @default(uuid()) @db.Uuid
+  ownerType    String   @db.VarChar(10) // CA, STAFF, PATIENT, WITNESS, SERVICE
+  ownerRef     String?  @db.VarChar(64)
+  keyStoreType String   @db.VarChar(10) // SOFT, HSM
+  keyRef       String   @db.VarChar(256) // HSM 핸들 또는 KMS-암호화 blob 참조 (개인키 평문 금지)
+  algorithm    String   @db.VarChar(20) // RSA-3072, ECDSA-P256
+  publicKey    String   @db.Text
+  status       String   @default("ACTIVE") @db.VarChar(20) // ACTIVE, RETIRED, COMPROMISED
+  createdAt    DateTime @default(now()) @db.Timestamptz()
+
+  certificate Certificate?
+
+  @@index([ownerType, ownerRef])
+  @@map("key_materials")
+}
+
+// ── PKI: 인증서 (자체 2단 CA 발급, 유한 수명) ──
+model Certificate {
+  id                     String    @id @default(uuid()) @db.Uuid
+  serialNumber           String    @unique @db.VarChar(64)
+  subjectDn              String    @db.VarChar(500)
+  issuerDn               String    @db.VarChar(500)
+  ownerType              String    @db.VarChar(10) // CA, STAFF, PATIENT, WITNESS
+  ownerRef               String?   @db.VarChar(64)
+  keyId                  String    @unique @db.Uuid
+  x509Pem                String    @db.Text
+  fingerprint            String    @db.VarChar(64)
+  algorithm              String    @db.VarChar(20)
+  notBefore              DateTime  @db.Timestamptz()
+  notAfter               DateTime  @db.Timestamptz()
+  status                 String    @default("ACTIVE") @db.VarChar(20) // ACTIVE, SUSPENDED, REVOKED, EXPIRED
+  revokedAt              DateTime? @db.Timestamptz()
+  revokeReason           String?   @db.VarChar(200)
+  issuerCertId           String?   @db.Uuid
+  identityVerificationId String?   @db.Uuid
+  licenseNumber          String?   @db.VarChar(50) // STAFF
+  createdAt              DateTime  @default(now()) @db.Timestamptz()
+
+  keyMaterial KeyMaterial   @relation(fields: [keyId], references: [id])
+  issuerCert  Certificate?  @relation("CertChain", fields: [issuerCertId], references: [id])
+  issued      Certificate[] @relation("CertChain")
+  signatures  Signature[]
+  revocations CertRevocation[]
+
+  @@index([ownerType, ownerRef])
+  @@index([status])
+  @@map("certificates")
+}
+
+// ── PKI: 폐기 (CRL/OCSP) ──
+model CertRevocation {
+  id           String   @id @default(uuid()) @db.Uuid
+  certId       String   @db.Uuid
+  serialNumber String   @db.VarChar(64)
+  revokedAt    DateTime @db.Timestamptz()
+  reason       String   @db.VarChar(50) // keyCompromise, superseded, cessationOfOperation
+  crlNumber    Int
+
+  certificate Certificate @relation(fields: [certId], references: [id])
+
+  @@index([serialNumber])
+  @@map("cert_revocations")
+}
+
+// ── 서명 봉투 (ConsentForm 매핑) ──
+model SignatureRequest {
+  id               String    @id @default(uuid()) @db.Uuid
+  externalSystem   String    @db.VarChar(30) // HOSPITALRUN
+  externalDocType  String    @db.VarChar(50) // CONSENT
+  externalDocId    String    @db.VarChar(64) // ConsentForm.id
+  patientRef       String?   @db.VarChar(64)
+  title            String    @db.VarChar(200)
+  documentHash     String    @db.VarChar(64)
+  documentVersion  Int       @default(1)
+  signMode         String    @db.VarChar(20) // APP, TABLET, PC, PORTAL, REMOTE
+  channel          String?   @db.VarChar(20) // KAKAO, SMS, INPERSON
+  status           String    @default("CREATED") @db.VarChar(20) // CREATED, SENT, IN_PROGRESS, COMPLETED, EXPIRED, REVOKED, FAILED
+  requiredSigners  Int       @default(1)
+  completedSigners Int       @default(0)
+  idempotencyKey   String    @unique @db.VarChar(64)
+  callbackUrl      String?   @db.VarChar(500)
+  expiresAt        DateTime? @db.Timestamptz()
+  createdAt        DateTime  @default(now()) @db.Timestamptz()
+
+  participants SignerParticipant[]
+  signatures   Signature[]
+  auditTrail   AuditTrail[]
+  auditCert    AuditCertificate?
+
+  @@index([externalSystem, externalDocType, externalDocId])
+  @@index([status, createdAt])
+  @@map("signature_requests")
+}
+
+model SignerParticipant {
+  id                    String  @id @default(uuid()) @db.Uuid
+  requestId             String  @db.Uuid
+  signerRole            String  @db.VarChar(20) // PATIENT, GUARDIAN, DOCTOR, NURSE, WITNESS
+  signerType            String  @db.VarChar(20) // PATIENT, STAFF, GUARDIAN, WITNESS_EXTERNAL
+  externalSignerRef     String? @db.VarChar(64)
+  displayName           String  @db.VarChar(100)
+  signOrder             Int     @default(1)
+  requiredIdentityLevel String  @default("INPERSON") @db.VarChar(20) // NONE, INPERSON, MOBILE_NAME, PASS, APP_STEPUP, STAFF_SSO
+  contactPhoneHash      String? @db.VarChar(128) // §12 토큰-연락처 바인딩
+  guardianName          String? @db.VarChar(100)
+  guardianRelation      String? @db.VarChar(30)
+  guardianLegalBasis    String? @db.VarChar(50)
+  status                String  @default("PENDING") @db.VarChar(20) // PENDING, IDENTIFIED, SIGNED, DECLINED
+
+  request   SignatureRequest @relation(fields: [requestId], references: [id])
+  signature Signature?
+
+  @@index([requestId, signOrder])
+  @@map("signer_participants")
+}
+
+// ── 서명 (실제 암호 서명, PAdES-B-LTA) ──
+model Signature {
+  id                     String    @id @default(uuid()) @db.Uuid
+  requestId              String    @db.Uuid
+  participantId          String    @unique @db.Uuid
+  certificateId          String    @db.Uuid
+  signatureValue         String    @db.Text // 실제 서명 바이트(base64)
+  signatureAlgorithm     String    @db.VarChar(30) // SHA256withRSA / SHA256withECDSA
+  signedAttrsHash        String    @db.VarChar(64)
+  format                 String    @default("PAdES-B-LTA") @db.VarChar(20)
+  dssData                Json? // 장기검증: chain/crl/ocsp/ts
+  handwrittenImage       String?   @db.Text
+  timestampId            String?   @unique @db.Uuid
+  identityVerificationId String    @db.Uuid // §15 NOT NULL
+  signedAt               DateTime  @db.Timestamptz()
+  ipAddress              String?   @db.VarChar(45)
+  userAgent              String?   @db.VarChar(500)
+  deviceId               String?   @db.VarChar(64)
+  isValid                Boolean   @default(true)
+  verifiedAt             DateTime? @db.Timestamptz()
+
+  request     SignatureRequest      @relation(fields: [requestId], references: [id])
+  participant SignerParticipant     @relation(fields: [participantId], references: [id])
+  certificate Certificate           @relation(fields: [certificateId], references: [id])
+  timestamp   Timestamp?            @relation(fields: [timestampId], references: [id])
+  identity    IdentityVerification  @relation(fields: [identityVerificationId], references: [id])
+
+  @@index([requestId])
+  @@map("signatures")
+}
+
+// ── RFC3161 신뢰 시점 토큰 ──
+model Timestamp {
+  id            String   @id @default(uuid()) @db.Uuid
+  tsaProvider   String   @db.VarChar(30) // SELF, EXTERNAL_KISA
+  hashedMessage String   @db.VarChar(64)
+  hashAlgorithm String   @db.VarChar(20)
+  tsToken       String   @db.Text
+  genTime       DateTime @db.Timestamptz()
+  tsaSerial     String?  @db.VarChar(64)
+  createdAt     DateTime @default(now()) @db.Timestamptz()
+
+  signature Signature?
+
+  @@map("timestamps")
+}
+
+// ── 본인확인 기록 ──
+model IdentityVerification {
+  id           String   @id @default(uuid()) @db.Uuid
+  subjectRef   String?  @db.VarChar(64)
+  method       String   @db.VarChar(20) // INPERSON, MOBILE_NAME, PASS, KAKAO_CERT, ACCESS_CODE, STAFF_SSO
+  provider     String?  @db.VarChar(30)
+  providerTxId String?  @db.VarChar(128)
+  verifiedName String?  @db.VarChar(100)
+  ciHash       String?  @db.VarChar(128)
+  phoneHash    String?  @db.VarChar(128)
+  result       String   @db.VarChar(10) // SUCCESS, FAIL
+  verifiedAt   DateTime @db.Timestamptz()
+  ipAddress    String?  @db.VarChar(45)
+
+  signatures Signature[]
+
+  @@index([subjectRef])
+  @@map("identity_verifications")
+}
+
+// ── 감사추적 (append-only 해시체인) ──
+model AuditTrail {
+  id         String   @id @default(uuid()) @db.Uuid
+  requestId  String   @db.Uuid
+  eventType  String   @db.VarChar(30) // CREATED, SENT, VIEWED, IDENTITY_VERIFIED, IDENTITY_FAILED, SIGNED, COMPLETED, REVOKED, EXPIRED, VERIFIED, FAILED, CERT_ISSUED, CERT_REVOKED
+  actorType  String   @db.VarChar(10) // PATIENT, STAFF, SYSTEM
+  actorRef   String?  @db.VarChar(64)
+  ipAddress  String?  @db.VarChar(45)
+  userAgent  String?  @db.VarChar(500)
+  deviceId   String?  @db.VarChar(64)
+  eventData  Json?
+  prevHash   String?  @db.VarChar(64)
+  entryHash  String   @db.VarChar(64)
+  occurredAt DateTime @default(now()) @db.Timestamptz()
+
+  request SignatureRequest @relation(fields: [requestId], references: [id])
+
+  @@index([requestId, occurredAt])
+  @@map("audit_trails")
+}
+
+model AuditCertificate {
+  id          String   @id @default(uuid()) @db.Uuid
+  requestId   String   @unique @db.Uuid
+  contentHash String   @db.VarChar(64)
+  pdfUri      String?  @db.VarChar(500)
+  timestampId String?  @db.Uuid
+  generatedAt DateTime @default(now()) @db.Timestamptz()
+
+  request SignatureRequest @relation(fields: [requestId], references: [id])
+
+  @@map("audit_certificates")
+}
+
+// ── 감사 체인 앵커링 (TSA 봉인) ──
+model AuditAnchor {
+  id          String   @id @default(uuid()) @db.Uuid
+  headHash    String   @db.VarChar(64)
+  timestampId String   @db.Uuid
+  periodAt    DateTime @db.Timestamptz()
+
+  @@map("audit_anchors")
+}
+
+// ── 멀티테넌트 (플랫폼화 FR-11) ──
+model ConsumerApp {
+  id              String  @id @default(uuid()) @db.Uuid
+  name            String  @db.VarChar(100)
+  apiKeyHash      String  @db.VarChar(128)
+  mtlsFingerprint String? @db.VarChar(64)
+  allowedScopes   Json
+  webhookSecret   String  @db.VarChar(128)
+  status          String  @default("ACTIVE") @db.VarChar(20)
+
+  @@map("consumer_apps")
+}
+
+// ── 운영 영속화 레코드 (SignStore 포트의 Prisma 어댑터용 lossless 저장) ──
+// 리치 관계형 모델(위)은 분석·조회·인증심사용. 본 테이블은 런타임 SignStore의 즉시 영속화.
+model StoreRecord {
+  seq       Int      @id @default(autoincrement())
+  kind      String   @db.VarChar(20) // cert, request, idem, signature, identity, audit, revocation, webhook, meta
+  rkey      String   @db.VarChar(128)
+  data      Json
+  // 목록 푸시다운용 인덱스 컬럼 — 대시보드/인증서 목록 확장성. kind별로 해당 컬럼만 채움(그 외 null).
+  status       String?   @db.VarChar(30) // request: 상태(필터)
+  reqCreatedAt DateTime? @db.Timestamptz() // request: 생성 시각(정렬·기간 필터)
+  createdBy    String?   @db.VarChar(30) // request: 출처 소비자(필터)
+  signMode     String?   @db.VarChar(20) // request: 서명모드(필터)
+  ownerType    String?   @db.VarChar(10) // cert: 소유자 유형(CA 제외·유형 필터)
+  notBefore    DateTime? @db.Timestamptz() // cert: 발급 시각(정렬)
+  searchText   String?   @db.Text // 소문자 검색 텍스트(request: 제목·문서ID·요청ID·참가자명 / cert: 시리얼·주체·유형·면허)
+  archived     Boolean?  // request(계약): 보관 필터 캐시(A3) — 정본은 contract-meta, ContractService 동기화
+  category     String?   @db.VarChar(40) // request(계약): 분류 필터 캐시(A3)
+  labelsText   String?   @db.Text // request(계약): '|라벨|라벨|' — label 포함 필터(A3)
+  updatedAt DateTime @updatedAt
+
+  @@index([kind, rkey])
+  @@index([kind, signMode, archived, reqCreatedAt]) // 계약함: 보관 제외/보관만 + 최신순(A3)
+  @@index([kind, status, reqCreatedAt]) // request: 상태 필터 + 최신순
+  @@index([kind, reqCreatedAt]) // request: 기간/정렬(상태 무관)
+  @@index([kind, createdBy, reqCreatedAt]) // request: 출처 필터 + 최신순
+  @@index([kind, ownerType, notBefore]) // cert: CA 제외 + 최신순
+  @@map("store_records")
+}
+
+// ── 연동 Outbox (멱등 Webhook) ──
+model WebhookDelivery {
+  id          String    @id @default(uuid()) @db.Uuid
+  requestId   String    @db.Uuid
+  eventType   String    @db.VarChar(30)
+  targetUrl   String    @db.VarChar(500)
+  payload     Json
+  hmac        String    @db.VarChar(128)
+  status      String    @default("PENDING") @db.VarChar(20) // PENDING, SENT, FAILED
+  attempts    Int       @default(0)
+  lastAttempt DateTime? @db.Timestamptz()
+  createdAt   DateTime  @default(now()) @db.Timestamptz()
+
+  @@index([status])
+  @@map("webhook_deliveries")
+}

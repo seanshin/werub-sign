@@ -1,0 +1,93 @@
+/* ============================================================
+   Pagination 컴포넌트
+   ============================================================ */
+
+.root {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--color-border);
+  background: var(--color-bg-secondary);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+
+/* 페이지 크기 선택 */
+.sizeSelector {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.sizeLabel {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.sizeSelect {
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-xs);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+
+.sizeSelect:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(31, 111, 235, 0.12);
+}
+
+/* 범위 표시 */
+.range {
+  flex: 1;
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  text-align: center;
+  white-space: nowrap;
+  min-width: 120px;
+}
+
+/* 이전/다음 네비게이션 */
+.nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.navBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--color-text-primary);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+  outline: none;
+}
+
+.navBtn:hover:not(:disabled) {
+  background: var(--color-primary-light);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.navBtn:focus-visible {
+  box-shadow: 0 0 0 3px rgba(31, 111, 235, 0.2);
+}
+
+.navBtn:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
